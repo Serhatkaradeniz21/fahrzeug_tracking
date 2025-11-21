@@ -1,0 +1,257 @@
+/* --------------------------------------------------------
+   GLOBAL
+--------------------------------------------------------- */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #40E0D0;   /* Türkis */
+    color: #0000FF;              /* Blau */
+    margin: 0;
+    padding: 0;
+}
+
+/* --------------------------------------------------------
+   ZENTRIERTER CONTAINER
+--------------------------------------------------------- */
+
+.seite-zentriert {
+    max-width: 800px;
+    margin: 40px auto;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.15);
+    text-align: center;
+}
+
+/* --------------------------------------------------------
+   HEADERS
+--------------------------------------------------------- */
+
+h1, h2, h3 {
+    color: #0000FF;
+    margin-top: 0;
+}
+
+/* Dashboard Kopfzeile */
+.kopfzeile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background: #009999;   /* sanfteres Dunkeltürkis */
+    color: #ffffff;
+}
+
+.kopfzeile h1 {
+    color: #ffffff;
+    margin: 0;
+}
+
+.kopf-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+/* --------------------------------------------------------
+   TABELLEN
+--------------------------------------------------------- */
+
+.tabelle-container {
+    padding: 20px 30px 40px 30px;
+}
+
+/* Gesamttabelle */
+.daten-tabelle {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 14px;
+}
+
+/* Tabellenkopf */
+.daten-tabelle thead {
+    background: #6d78e0;  /* weiches Blau */
+    color: #ffffff;
+}
+
+/* KEIN Hover im Tabellenkopf */
+.daten-tabelle thead tr:hover {
+    background: #6d78e0 !important;
+}
+
+/* Tabellenzellen */
+.daten-tabelle th,
+.daten-tabelle td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+/* Zebra-Streifen */
+.daten-tabelle tbody tr:nth-child(even) {
+    background: #f5f5f5;
+}
+
+/* Hover NUR für tbody */
+.daten-tabelle tbody tr:hover {
+    background: #e0f7f5;
+}
+
+/* --------------------------------------------------------
+   BUTTONS
+--------------------------------------------------------- */
+
+button,
+.btn-primar,
+.btn-zweit,
+.btn-klein,
+.btn-gefahr,
+a.btn-primar,
+a.btn-zweit,
+a.btn-klein,
+a.btn-gefahr {
+    display: inline-block;
+    background-color: #ffffff;
+    color: #0000FF;
+    border: 2px solid #40E0D0;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s, transform 0.1s;
+}
+
+/* Hover für Buttons */
+button:hover,
+.btn-primar:hover,
+.btn-zweit:hover,
+.btn-klein:hover,
+.btn-gefahr:hover {
+    background-color: #40E0D0;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+/* Primärer Button */
+.btn-primar {
+    background-color: #0000FF;
+    color: #ffffff;
+    border-color: #0000FF;
+}
+
+.btn-primar:hover {
+    background-color: #ffffff;
+    color: #0000FF;
+}
+
+/* Zweit-Button */
+.btn-zweit {
+    background-color: #ffffff;
+    color: #0000FF;
+}
+
+/* Kleine Buttons */
+.btn-klein {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+/* Gefahren-Button */
+.btn-gefahr {
+    border-color: #ff4d4d;
+    color: #ff4d4d;
+}
+
+.btn-gefahr:hover {
+    background-color: #ff4d4d;
+    color: #ffffff;
+}
+
+/* --------------------------------------------------------
+   FORMULARE
+--------------------------------------------------------- */
+
+.formular {
+    text-align: left;
+    margin-top: 15px;
+}
+
+.formular-gruppe {
+    margin-bottom: 12px;
+}
+
+.formular-gruppe label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #0000FF;
+}
+
+.formular-gruppe input[type="text"],
+.formular-gruppe input[type="password"],
+.formular-gruppe input[type="number"],
+.formular-gruppe input[type="date"],
+.formular-gruppe input[type="file"] {
+    width: 100%;
+    padding: 6px 8px;
+    border-radius: 5px;
+    border: 1px solid #40E0D0;
+    box-sizing: border-box;
+}
+
+.formular-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
+}
+
+/* --------------------------------------------------------
+   BUTTON-GRUPPE
+--------------------------------------------------------- */
+
+.button-gruppe {
+    margin-top: 20px;
+}
+
+.button-gruppe.zentriert {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* --------------------------------------------------------
+   HINWEISE
+--------------------------------------------------------- */
+
+.hinweis-fehler {
+    color: #ff0000;
+    font-weight: bold;
+}
+
+/* --------------------------------------------------------
+   LINKS (KM-Link Anzeige)
+--------------------------------------------------------- */
+
+.link-box {
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.link-box input[type="text"] {
+    width: 70%;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #40E0D0;
+}
+
+/* Links in Tabellen */
+.daten-tabelle td a {
+    color: #0000FF;
+}
