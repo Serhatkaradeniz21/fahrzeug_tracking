@@ -1,20 +1,19 @@
 # view/templates.py
 # Dieses Modul enthält Funktionen zur Erstellung von HTML-Templates.
-# Es sorgt für ein einheitliches Layout und erleichtert die Darstellung von Fehlern und Inhalten.
+# Ziel ist es, ein einheitliches Layout zu gewährleisten und die Darstellung von Fehlern und Inhalten zu erleichtern.
 
 from typing import List, Optional, Dict, Any
 from model.km_model import FahrzeugAnzeige, KmAnforderungResponse
 
 
 # ---------------------------------------------------------
-# Grundlayout – jede Seite nutzt diese Basisfunktion
+# HTML-TEMPLATES
 # ---------------------------------------------------------
 
+# Diese Funktion erzeugt das Grundlayout für alle HTML-Seiten.
+# - Sie bindet die CSS-Datei ein, um ein konsistentes Design zu gewährleisten.
+# - Ermöglicht die Einbettung von spezifischem Inhalt pro Seite.
 def layout(titel: str, inhalt: str) -> str:
-    """
-    Diese Funktion erzeugt das Grundlayout für alle HTML-Seiten.
-    Sie stellt sicher, dass jede Seite ein konsistentes Design hat und die CSS-Datei eingebunden ist.
-    """
     return f"""
     <html>
         <head>
@@ -30,8 +29,10 @@ def layout(titel: str, inhalt: str) -> str:
 
 def fehler(text: Optional[str]) -> str:
     """
-    Diese Funktion erzeugt eine standardisierte Fehlerbox, die auf der Seite angezeigt wird.
-    Sie wird verwendet, um dem Benutzer Fehlermeldungen oder Hinweise anzuzeigen.
+    Erzeugt eine standardisierte Fehlerbox für die Anzeige von Fehlermeldungen.
+
+    - Wird verwendet, um dem Benutzer wichtige Hinweise oder Fehler anzuzeigen.
+    - Gibt eine leere Zeichenkette zurück, wenn kein Text übergeben wird.
     """
     return f"<p class='hinweis-fehler'>{text}</p>" if text else ""
 
@@ -41,6 +42,9 @@ def fehler(text: Optional[str]) -> str:
 # ---------------------------------------------------------
 
 def render_login_seite(csrf_token: str, fehlermeldung: Optional[str] = None) -> str:
+    """
+    Erstellt die HTML-Seite für den Login-Bereich.
+    """
     inhalt = f"""
         <div class="seite-zentriert">
             <h1>FahrzeugTracking – Login</h1>
@@ -72,6 +76,14 @@ def render_login_seite(csrf_token: str, fehlermeldung: Optional[str] = None) -> 
 # ---------------------------------------------------------
 
 def render_dashboard(fahrzeuge: List[FahrzeugAnzeige], csrf_token: str) -> str:
+    """
+    Erstellt die HTML-Seite für das Dashboard mit der Übersicht der Fahrzeuge.
+
+    Wichtige Punkte:
+    - Iteriert über die Fahrzeugdaten und erstellt eine tabellarische Übersicht.
+    - Zeigt wichtige Informationen wie TÜV-Daten, Ölwechsel und letzte Kilometerstände an.
+    - Bindet den CSRF-Token ein, um Formularsicherheit zu gewährleisten.
+    """
     zeilen = ""
 
     for f in fahrzeuge:
@@ -95,6 +107,7 @@ def render_dashboard(fahrzeuge: List[FahrzeugAnzeige], csrf_token: str) -> str:
 
         status = "Offen" if f.link_noch_offen else "Erledigt"
 
+        # Dynamische Zeilen für die Fahrzeugübersichtstabelle
         zeilen += f"""
         <tr>
             <td>{f.id}</td>
@@ -136,6 +149,7 @@ def render_dashboard(fahrzeuge: List[FahrzeugAnzeige], csrf_token: str) -> str:
         </tr>
         """
 
+    # HTML-Inhalt für das Dashboard zusammenstellen
     inhalt = f"""
         <div class="kopfzeile">
             <h1>Fahrzeug-Dashboard</h1>
@@ -180,6 +194,9 @@ def render_dashboard(fahrzeuge: List[FahrzeugAnzeige], csrf_token: str) -> str:
 # ---------------------------------------------------------
 
 def render_km_eingabe_formular(token: str, csrf_token: str, hinweis: Optional[str] = None) -> str:
+    """
+    Erstellt das HTML-Formular zur Eingabe des Kilometerstands durch den Fahrer.
+    """
     inhalt = f"""
         <div class="seite-zentriert">
             <h1>Kilometerstand eingeben</h1>
@@ -215,6 +232,9 @@ def render_km_eingabe_formular(token: str, csrf_token: str, hinweis: Optional[st
 
 
 def render_km_danke_seite() -> str:
+    """
+    Zeigt eine Dankeseite nach erfolgreicher Eingabe des Kilometerstands an.
+    """
     return layout(
         "Danke",
         """
@@ -231,6 +251,9 @@ def render_km_danke_seite() -> str:
 # ---------------------------------------------------------
 
 def render_fahrzeug_neu(csrf_token: str, hinweis: Optional[str] = None) -> str:
+    """
+    Erstellt das HTML-Formular zur Anlage eines neuen Fahrzeugs.
+    """
     inhalt = f"""
         <div class="seite-zentriert">
             <h1>Neues Fahrzeug anlegen</h1>
@@ -275,6 +298,9 @@ def render_fahrzeug_neu(csrf_token: str, hinweis: Optional[str] = None) -> str:
 
 
 def render_fahrzeug_bearbeiten(fahrzeug: Dict[str, Any], csrf_token: str, hinweis: Optional[str] = None) -> str:
+    """
+    Erstellt das HTML-Formular zur Bearbeitung eines bestehenden Fahrzeugs.
+    """
     tuev = fahrzeug.get("tuev_bis")
     tuev_wert = tuev.strftime("%Y-%m-%d") if tuev else ""
 
@@ -338,6 +364,9 @@ def render_fahrzeug_bearbeiten(fahrzeug: Dict[str, Any], csrf_token: str, hinwei
 # ---------------------------------------------------------
 
 def render_km_link_anzeige(antwort: KmAnforderungResponse) -> str:
+    """
+    Zeigt die Seite nach erfolgreicher Erstellung eines KM-Links an.
+    """
     inhalt = f"""
         <div class="seite-zentriert">
             <h1>KM-Link erzeugt</h1>
@@ -370,6 +399,9 @@ def render_km_link_anzeige(antwort: KmAnforderungResponse) -> str:
 # ---------------------------------------------------------
 
 def render_km_historie(fahrzeug: Dict[str, Any], km_eintraege: List[Dict[str, Any]]) -> str:
+    """
+    Zeigt die KM-Historie eines Fahrzeugs an.
+    """
     zeilen = ""
 
     for e in km_eintraege:

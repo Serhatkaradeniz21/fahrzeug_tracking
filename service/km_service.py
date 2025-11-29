@@ -1,7 +1,6 @@
 # service/km_service.py
 # Dieses Modul enthält die Geschäftslogik für das FahrzeugTracking-System.
-# Es verbindet die Controller-Schicht mit der Datenbank und stellt sicher,
-# dass die Daten konsistent verarbeitet werden.
+# Ziel ist es, die Controller-Schicht mit der Datenbank zu verbinden und sicherzustellen, dass die Daten konsistent verarbeitet werden.
 
 from typing import Optional, List, Dict, Any
 from datetime import date
@@ -17,27 +16,24 @@ from model.km_model import (
 from datenbank.repository import KilometerRepository
 from datenbank.verbindung import get_db_verbindung
 
+# ---------------------------------------------------------
+# Hilfsfunktionen
+# ---------------------------------------------------------
 
-def wert_oder_none(eintrag: dict, feld: str):
+def wert_oder_none(eintrag: dict, feld: str) -> Optional[Any]:
     """
-    Kleine Hilfsfunktion:
-    - Wenn ein Eintrag existiert: gib das Feld zurück
-    - Wenn None: liefere None zurück
-    So sparen wir uns if/else-Blöcke im Dashboard.
+    Hilfsfunktion, um sicher Werte aus einem Dictionary abzurufen.
 
-    Die Funktion `wert_oder_none` ist eine kleine Hilfsfunktion, die es ermöglicht,
-    Werte aus einem Dictionary sicher abzurufen. Sie wird verwendet, um
-    if/else-Blöcke zu vermeiden und den Code lesbarer zu machen.
+    - Gibt den Wert des Feldes zurück oder None, falls das Feld nicht existiert.
+    - Wird häufig verwendet, um Fehler bei fehlenden Schlüsseln zu vermeiden.
     """
     return eintrag.get(feld) if eintrag else None
 
+# ---------------------------------------------------------
+# Geschäftslogik
+# ---------------------------------------------------------
 
 class KilometerService:
-    """
-    Diese Klasse stellt die Geschäftslogik für Kilometeranforderungen und -eingaben bereit.
-    Sie kommuniziert mit dem Repository, um Daten aus der Datenbank abzurufen oder zu speichern.
-    """
-
     def __init__(self) -> None:
         # Verbindung zur Datenbank aufbauen
         verbindung = get_db_verbindung()
@@ -49,8 +45,10 @@ class KilometerService:
 
     def hole_fahrzeuge_fuer_dashboard(self) -> List[FahrzeugAnzeige]:
         """
-        Holt alle Fahrzeuge und ergänzt sie um Anzeige-Infos
-        wie TÜV-Resttage, Ölwechsel-Infos und Link-Status.
+        Holt alle Fahrzeuge und ergänzt sie um Anzeige-Infos wie TÜV-Resttage, Ölwechsel-Infos und Link-Status.
+
+        - Ruft die Rohdaten aus der Datenbank ab.
+        - Berechnet zusätzliche Informationen für die Anzeige im Dashboard.
         """
         roh_daten = self.repo.hole_alle_fahrzeuge()
         fahrzeuge: List[FahrzeugAnzeige] = []
@@ -65,14 +63,14 @@ class KilometerService:
             datensatz["letzter_fahrer_name"] = wert_oder_none(letzter, "fahrer_name")
             datensatz["letzter_km_datum"] = wert_oder_none(letzter, "erfasst_am")
 
-            # TÜV-Resttage
+            # TüV-Resttage berechnen
             tuev_bis = datensatz.get("tuev_bis")
             if tuev_bis:
                 datensatz["tuev_rest_tage"] = (tuev_bis - heute).days
             else:
                 datensatz["tuev_rest_tage"] = None
 
-            # Ölwechsel: Rest-Kilometer bis zum nächsten Ölwechsel
+            # Rest-Kilometer bis zum nächsten Ölwechsel berechnen
             naechster_oel_km = datensatz.get("naechster_oelwechsel_km")
             aktueller_km = datensatz.get("aktueller_km") or 0
             if naechster_oel_km is not None:
@@ -80,7 +78,7 @@ class KilometerService:
             else:
                 datensatz["rest_km_bis_oelwechsel"] = None
 
-            # Link-Status: letzte KM-Anforderung
+            # Link-Status für die letzte Kilometeranforderung prüfen
             letzte_anforderung = self.repo.hole_letzte_km_anforderung_fuer_fahrzeug(
                 fahrzeug_id
             )
@@ -95,6 +93,7 @@ class KilometerService:
                 datensatz["letzter_link_versandt_am"] = None
                 datensatz["link_noch_offen"] = False
 
+            # Fahrzeugdaten in die Liste aufnehmen
             fahrzeuge.append(FahrzeugAnzeige(**datensatz))
 
         return fahrzeuge
@@ -105,7 +104,10 @@ class KilometerService:
 
     def hole_fahrzeug_details(self, fahrzeug_id: int) -> Optional[Dict[str, Any]]:
         """
-        Liefert die Basisdaten eines Fahrzeugs.
+        Ruft die Basisdaten eines Fahrzeugs aus der Datenbank ab.
+
+        - `fahrzeug_id`: Die eindeutige ID des Fahrzeugs.
+        - Gibt ein Dictionary mit den Fahrzeugdaten zurück oder None, falls nicht gefunden.
         """
         return self.repo.hole_fahrzeug_nach_id(fahrzeug_id)
 
@@ -118,7 +120,10 @@ class KilometerService:
         naechster_oelwechsel_km: int,
     ) -> None:
         """
-        Legt ein neues Fahrzeug an. Alle Felder sind Pflichtfelder.
+        Legt ein neues Fahrzeug in der Datenbank an.
+
+        - Alle Felder sind Pflichtfelder.
+        - Führt keine zusätzliche Validierung durch, da diese bereits im Controller erfolgt.
         """
         self.repo.fuege_fahrzeug_hinzu(
             kennzeichen=kennzeichen,
@@ -138,12 +143,11 @@ class KilometerService:
         naechster_oelwechsel_km: int,
     ) -> None:
         """
-        Aktualisiert ein vorhandenes Fahrzeug mit allen relevanten Angaben.
-        Danach werden direkt die Wartungs-Schwellen (TÜV / Ölwechsel)
-        anhand der neuen Daten geprüft und ggf. Warnmails ausgelöst.
+        Aktualisiert die Daten eines vorhandenen Fahrzeugs.
 
-        Wichtig: Der Disponent darf an allen Zahlen drehen, die Berechnung
-        baut aber immer auf dem aktuell gespeicherten Kilometerstand auf.
+        - Aktualisiert alle relevanten Felder in der Datenbank.
+        - Führt nach der Aktualisierung eine Überprüfung der Wartungs-Schwellen durch.
+        - Löst bei Bedarf Warnmails aus (z. B. bei TÜV oder Ölwechsel).
         """
         # Daten in der Datenbank aktualisieren
         self.repo.aktualisiere_fahrzeug(
@@ -157,6 +161,8 @@ class KilometerService:
 
         # Aktualisierte Fahrzeugdaten holen
         fahrzeug_nach_update = self.repo.hole_fahrzeug_nach_id(fahrzeug_id)
+        print("WARTUNGSPRUEFUNG STARTET")
+        print("Fahrzeugdaten:", fahrzeug_nach_update)
 
         if fahrzeug_nach_update:
             # Wartungslogik auf Basis der aktuellen Daten anstoßen
@@ -255,7 +261,7 @@ class KilometerService:
         Prüft TÜV- und Ölwechsel-Schwellen und verschickt bei Bedarf Warnmails.
         Wird nach jeder neuen Kilometer-Eingabe oder manuellen Aktualisierung aufgerufen.
         """
-        empfaenger = os.getenv("DISPONENT_EMAIL", "disponent@example.local")
+        empfaenger = os.getenv("DISPONENT_EMAIL", "primafahrten@info.de")
 
         fahrzeug_text = f"{fahrzeug.get('kennzeichen', '')} - {fahrzeug.get('bezeichnung', '')}"
 
@@ -278,7 +284,7 @@ class KilometerService:
         naechster_oel_km = fahrzeug.get("naechster_oelwechsel_km")
 
         if naechster_oel_km is not None and naechster_oel_km > 0:
-            # Letzter Ölwechsel = nächster_oelwechsel_km - 15.000
+            # Letzter Ölwechsel = naechster_oelwechsel_km - 15.000
             basis_letzter_oelwechsel = naechster_oel_km - 15000
             km_seit_letztem_oel = aktueller_km - basis_letzter_oelwechsel
 
@@ -315,7 +321,7 @@ class KilometerService:
         Im Prototyp wird zunächst versucht, über localhost:1025 zu senden
         (z.B. mit MailHog). Bei Fehlern wird nur eine Meldung in der Konsole ausgegeben.
         """
-        absender = os.getenv("MAIL_ABSENDER", "fahrzeugtracking@example.local")
+        absender = os.getenv("MAIL_ABSENDER", "serhat21@info.de")
 
         nachricht = f"Subject: {betreff}\nTo: {empfaenger}\nFrom: {absender}\n\n{text}"
         try:

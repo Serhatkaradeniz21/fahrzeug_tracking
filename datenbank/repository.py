@@ -1,19 +1,14 @@
 # datenbank/repository.py
 # Dieses Modul dient als Schnittstelle zwischen der Anwendung und der Datenbank.
-# Es kapselt alle SQL-Abfragen und stellt sicher, dass die Datenbankzugriffe sicher und effizient erfolgen.
+# Ziel ist es, alle SQL-Abfragen zu kapseln und die Datenbankzugriffe sicher und effizient zu gestalten.
 
 from typing import Any, Dict, List, Optional
 from mysql.connector import Error
 
 
 class KilometerRepository:
-    """
-    Diese Klasse ist für alle Datenbankoperationen verantwortlich, die sich auf Fahrzeuge,
-    Kilometerstände und Anforderungen beziehen. Sie stellt Methoden bereit, um Daten
-    abzurufen, zu speichern und zu aktualisieren.
-    """
-
     def __init__(self, verbindung) -> None:
+        # Initialisiert die Verbindung zur Datenbank
         self.verbindung = verbindung
 
     # ---------------------------------------------------------
@@ -22,9 +17,10 @@ class KilometerRepository:
 
     def hole_alle_fahrzeuge(self) -> List[Dict[str, Any]]:
         """
-        Diese Methode ruft alle Fahrzeuge aus der Datenbank ab und gibt sie als Liste von
-        Dictionaries zurück. Jedes Dictionary enthält die wichtigsten Fahrzeugdaten wie
-        Kennzeichen, Modell und Kilometerstand.
+        Ruft alle Fahrzeuge aus der Datenbank ab.
+
+        - Gibt eine Liste von Dictionaries zurück, die die wichtigsten Fahrzeugdaten enthalten.
+        - Jedes Dictionary enthält Felder wie Kennzeichen, Modell und Kilometerstand.
         """
         cursor = self.verbindung.cursor(dictionary=True)
 
@@ -52,9 +48,10 @@ class KilometerRepository:
         self, fahrzeug_id: int
     ) -> Optional[Dict[str, Any]]:
         """
-        Liefert ein Fahrzeug anhand der ID oder None.
+        Sucht ein Fahrzeug in der Datenbank anhand seiner ID.
+        Gibt ein Dictionary mit den Fahrzeugdaten zurück oder None, falls nicht gefunden.
         """
-        cursor = self.verbindung.cursor(dictionary=True)
+        cursor = self.verbindung.cursor(dictionary=True) #dictionary=True für bessere Lesbarkeit
 
         try:
             cursor.execute(
@@ -71,7 +68,7 @@ class KilometerRepository:
                 """,
                 (fahrzeug_id,),
             )
-            return cursor.fetchone()
+            return cursor.fetchone() 
         except Error as fehler:
             print("Fehler beim Lesen eines Fahrzeugs:", fehler)
             return None
@@ -87,7 +84,7 @@ class KilometerRepository:
         naechster_oelwechsel_km: Optional[int],
     ) -> None:
         """
-        Fügt ein neues Fahrzeug in die Tabelle 'fahrzeuge' ein.
+        Fügt ein neues Fahrzeug in die Datenbank ein.
         """
         cursor = self.verbindung.cursor()
 
@@ -116,7 +113,11 @@ class KilometerRepository:
         naechster_oelwechsel_km: Optional[int],
     ) -> None:
         """
-        Aktualisiert die Stammdaten eines Fahrzeugs.
+        Aktualisiert die Stammdaten eines Fahrzeugs in der Datenbank.
+
+        - `fahrzeug_id`: Die ID des Fahrzeugs, das aktualisiert werden soll.
+        - Aktualisiert Felder wie Kennzeichen, Modell, Kilometerstand, TÜV-Datum und Ölwechsel.
+        - Führt die Änderungen in einer Transaktion aus.
         """
         cursor = self.verbindung.cursor()
 
@@ -142,7 +143,10 @@ class KilometerRepository:
 
     def loesche_fahrzeug(self, fahrzeug_id: int) -> None:
         """
-        Löscht ein Fahrzeug und zugehörige KM-Einträge / KM-Anforderungen.
+        Löscht ein Fahrzeug aus der Datenbank.
+
+        - Entfernt auch zugehörige Kilometer-Einträge und Anforderungen.
+        - `fahrzeug_id`: Die ID des Fahrzeugs, das gelöscht werden soll.
         """
         cursor = self.verbindung.cursor()
 

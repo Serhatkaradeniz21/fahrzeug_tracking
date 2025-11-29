@@ -1,0 +1,3 @@
+# Ignoriere sensible Dateien und Dokumente
+.env
+dokumentation/

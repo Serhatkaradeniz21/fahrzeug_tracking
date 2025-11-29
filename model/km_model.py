@@ -15,11 +15,10 @@ from datetime import date, datetime
 class FahrzeugAnzeige(BaseModel):
     """
     Repräsentiert ein Fahrzeug im Dashboard.
-    Beinhaltet Stammdaten sowie abgeleitete Informationen:
-    - Restzeit bis TÜV
-    - Restkilometer bis Ölwechsel
-    - letzte KM-Meldung
-    - letzte Anforderung / Linkstatus
+
+    - Enthält Stammdaten wie Kennzeichen und Bezeichnung.
+    - Berechnete Felder wie Restzeit bis TÜV oder Restkilometer bis Ölwechsel.
+    - Historische Daten wie der letzte Fahrername und das Datum der letzten Kilometer-Meldung.
     """
     id: int
     kennzeichen: str
@@ -43,9 +42,7 @@ class FahrzeugAnzeige(BaseModel):
     link_noch_offen: bool = False
 
     class Config:
-        # Falls das Repository zusätzliche Felder liefert,
-        # werden sie nicht strikt validiert.
-        # Das macht das System erweiterbar.
+        # Zusätzliche Felder werden ignoriert, um Erweiterbarkeit zu ermöglichen.
         extra = "ignore"
 
 
@@ -55,10 +52,11 @@ class FahrzeugAnzeige(BaseModel):
 
 class KilometerEingabeRequest(BaseModel):
     """
-    Daten, die ein Fahrer im KM-Formular eingibt.
-    Validierung erfolgt über Pydantic:
-    - Name muss mind. 1 Zeichen haben
-    - Kilometerwert muss >= 0 sein
+    Daten, die ein Fahrer im Kilometer-Formular eingibt.
+
+    Wichtige Punkte:
+    - `name_fahrer`: Der Name des Fahrers, muss mindestens 1 Zeichen lang sein.
+    - `kilometerstand`: Der eingegebene Kilometerstand, muss größer oder gleich 0 sein.
     """
     name_fahrer: str = Field(min_length=1)
     kilometerstand: int = Field(ge=0)
@@ -70,8 +68,12 @@ class KilometerEingabeRequest(BaseModel):
 
 class KmAnforderungResponse(BaseModel):
     """
-    Antwortmodell für die Erzeugung eines KM-Anforderungslinks.
-    Wird im Template angezeigt.
+    Antwortmodell für die Erzeugung eines Kilometer-Anforderungslinks.
+
+    Wichtige Punkte:
+    - `fahrzeug_id`: Die ID des Fahrzeugs, für das der Link erstellt wurde.
+    - `token`: Ein eindeutiger Token, der den Link sichert.
+    - `link_url`: Die URL, die der Fahrer aufrufen kann, um Kilometer einzugeben.
     """
     fahrzeug_id: int
     token: str

@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Unit Tests",
+			"type": "shell",
+			"command": "python -m unittest discover -s tests -p \"test_*.py\"",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "test"
+		},
+		{
+			"label": "Run Unit Tests with Verbose Output",
+			"type": "shell",
+			"command": "python -m unittest discover -s tests -p \"test_*.py\" -v",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "test"
+		}
+	]
+}
