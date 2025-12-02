@@ -1,4 +1,18 @@
 # security.py
+# Sicherheitsmodul für das FahrzeugTracking-System.
+#
+# Ziel:
+# - Validierung von Benutzereingaben.
+# - Sichere Speicherung von Passwörtern.
+# - Schutz vor CSRF-Angriffen.
+#
+# Enthaltene Funktionen:
+# - erstelle_passwort_hash: Erstellt sichere Passwort-Hashes.
+# - pruefe_passwort: Validiert Passwörter gegen gespeicherte Hashes.
+# - erzeuge_csrf_token: Generiert CSRF-Tokens.
+# - signiere_csrf_token: Signiert CSRF-Tokens.
+# - pruefe_signierten_csrf_token: Validiert signierte CSRF-Tokens.
+
 # Dieses Modul enthält sicherheitsrelevante Funktionen für das FahrzeugTracking-System.
 # Ziel ist es, Benutzereingaben zu validieren, Passwörter sicher zu speichern und CSRF-Angriffe zu verhindern.
 
@@ -22,6 +36,9 @@ load_dotenv()
 
 # Geheimschlüssel für HMAC-Signaturen (z. B. für CSRF-Tokens)
 # Hinweis: In einer Produktionsumgebung sollte dieser Schlüssel sicher gespeichert werden.
+# Ein Fallback-Wert wird verwendet, wenn kein SECRET_KEY gesetzt ist. Dies ist jedoch unsicher
+# und sollte in einer Produktionsumgebung vermieden werden. Stattdessen sollte die Anwendung
+# einen Fehler auslösen, wenn der Schlüssel fehlt.
 GEHEIMER_SCHLUESSEL = os.getenv("SECRET_KEY")
 if GEHEIMER_SCHLUESSEL is None:
     print("WARNUNG: SECRET_KEY NICHT gefunden! Fallback wird verwendet.")
@@ -157,7 +174,7 @@ def reinige_text_einfach(text: str) -> str:
     if text is None:
         return ""
     text = text.strip()
-    text = "".join(z for z in text if z.isprintable())
+    text = "".join(z for z in text if z.isprintable())# Entfernt nicht-druckbare Zeichen
     return html.escape(text)
 
 

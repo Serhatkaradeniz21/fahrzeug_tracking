@@ -1,6 +1,29 @@
 # service/km_service.py
-# Dieses Modul enthält die Geschäftslogik für das FahrzeugTracking-System.
-# Ziel ist es, die Controller-Schicht mit der Datenbank zu verbinden und sicherzustellen, dass die Daten konsistent verarbeitet werden.
+# Geschäftslogik für das FahrzeugTracking-System.
+#
+# Ziel:
+# - Verbindung zwischen Controller-Schicht und Datenbank.
+# - Konsistente Verarbeitung der Daten.
+#
+# Enthaltene Kategorien und Funktionen:
+# 1. Dashboard / Fahrzeugliste:
+#    - hole_fahrzeuge_fuer_dashboard
+# 2. Fahrzeugverwaltung:
+#    - hole_fahrzeug_details
+#    - erstelle_fahrzeug
+#    - aktualisiere_fahrzeug
+#    - loesche_fahrzeug
+# 3. KM-Anforderungen / Links:
+#    - erzeuge_km_anforderung
+# 4. KM-Eingabe / Historie:
+#    - verarbeite_kilometer_eingabe
+#    - hole_km_historie
+# 5. Wartungslogik:
+#    - _pruefe_wartungen_und_benachrichtigen
+# 6. Hilfsfunktionen:
+#    - wert_oder_none
+# 7. Mailversand:
+#    - _sende_warnmail
 
 from typing import Optional, List, Dict, Any
 from datetime import date
@@ -261,7 +284,7 @@ class KilometerService:
         Prüft TÜV- und Ölwechsel-Schwellen und verschickt bei Bedarf Warnmails.
         Wird nach jeder neuen Kilometer-Eingabe oder manuellen Aktualisierung aufgerufen.
         """
-        empfaenger = os.getenv("DISPONENT_EMAIL", "primafahrten@info.de")
+        empfaenger = os.getenv("DISPONENT_EMAIL", "karadeniz.serhat21@gmail.com")
 
         fahrzeug_text = f"{fahrzeug.get('kennzeichen', '')} - {fahrzeug.get('bezeichnung', '')}"
 
@@ -321,7 +344,7 @@ class KilometerService:
         Im Prototyp wird zunächst versucht, über localhost:1025 zu senden
         (z.B. mit MailHog). Bei Fehlern wird nur eine Meldung in der Konsole ausgegeben.
         """
-        absender = os.getenv("MAIL_ABSENDER", "serhat21@info.de")
+        absender = os.getenv("MAIL_ABSENDER", "karadeniz.serhat21@gmail.com")
 
         nachricht = f"Subject: {betreff}\nTo: {empfaenger}\nFrom: {absender}\n\n{text}"
         try:

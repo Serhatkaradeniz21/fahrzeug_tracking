@@ -1,4 +1,13 @@
 # datenbank/verbindung.py
+# Stellt die Verbindung zur MySQL-Datenbank her.
+#
+# Ziel:
+# - Laden sensibler Zugangsdaten aus der .env-Datei.
+# - Aufbau einer sicheren Verbindung zur Datenbank.
+#
+# Enthaltene Funktionen:
+# - get_db_verbindung: Erstellt eine Verbindung zur MySQL-Datenbank.
+
 # Dieses Modul stellt die Verbindung zur MySQL-Datenbank her.
 # Es lädt sensible Zugangsdaten aus einer .env-Datei und verwendet diese für die Verbindung.
 

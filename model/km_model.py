@@ -1,7 +1,12 @@
 # model/km_model.py
 # Pydantic-Modelle für das FahrzeugTracking-System.
-# Diese Modelle beschreiben die Datenstrukturen, die zwischen
-# Controller, Service, Repository und Template übertragen werden.
+#
+# Ziel:
+# - Beschreibung der Datenstrukturen für Controller, Service, Repository und Templates.
+#
+# Enthaltene Modelle:
+# - FahrzeugAnzeige: Repräsentiert ein Fahrzeug im Dashboard.
+# - KilometerEingabeRequest: Beschreibt die Eingabe eines Kilometerstands.
 
 from pydantic import BaseModel, Field 
 from typing import Optional
@@ -23,7 +28,7 @@ class FahrzeugAnzeige(BaseModel):
     id: int
     kennzeichen: str
     bezeichnung: str
-    aktueller_km: int = Field(ge=0)
+    aktueller_km: int = Field(ge=0)# Aktueller Kilometerstand
 
     # TÜV
     tuev_bis: Optional[date] = None
@@ -42,7 +47,7 @@ class FahrzeugAnzeige(BaseModel):
     link_noch_offen: bool = False
 
     class Config:
-        # Zusätzliche Felder werden ignoriert, um Erweiterbarkeit zu ermöglichen.
+        # unbekannte Felder werden ignoriert falls enthalten schlägt nicht fehl und stürtzt ab.
         extra = "ignore"
 
 

@@ -1,5 +1,11 @@
 # hauptprogramm.py
 # Einstiegspunkt der Anwendung. Hier wird die FastAPI-Anwendung konfiguriert und gestartet.
+#
+# Enthaltene Funktionen:
+# - app: Initialisiert die FastAPI-Anwendung.
+# - Middleware-Konfiguration: Fügt Sitzungs- und Sicherheits-Middleware hinzu.
+# - Routenregistrierung: Bindet die Controller-Routen ein.
+# - Statische Dateien: Stellt CSS und andere Ressourcen bereit.
 
 # ---------------------------------------------------------
 # Voraussetzungen vor dem Start:

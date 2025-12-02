@@ -1,13 +1,26 @@
 # controller/km_controller.py
-# Dieses Modul steuert die HTTP-Routen und die zugehörige Logik für die Benutzerinteraktion.
-# Ziel ist es, die Service-Schicht mit der Präsentationsschicht zu verbinden und die richtigen Daten an die Templates zu übergeben.
+# HTTP-Routen und zugehörige Logik für Benutzerinteraktionen.
 #
-# Kapitelübersicht:
-# 1. CSRF-Token-Management
-# 2. Login-Management
-# 3. Login / Logout
-# 4. Dashboard-Management
-# 5. Fahrzeug-Management
+# Ziel:
+# - Verbindung zwischen Service- und Präsentationsschicht.
+# - Übergabe der richtigen Daten an Templates.
+#
+# Enthaltene Funktionen:
+# - generiere_und_speichere_csrf: CSRF-Token-Management.
+# - Login- und Logout-Management.
+# - Dashboard- und Fahrzeugverwaltung.
+
+
+#
+#from datetime import date
+#Wird verwendet, um Datumswerte zu verarbeiten (z. B. tuev_bis).
+#from pathlib import Path
+#Wird verwendet, um Dateipfade zu erstellen und zu verwalten (z. B. UPLOAD_DIR für das Speichern von Fotos).
+#from typing import Optional
+#Wird für Typannotationen verwendet, um anzugeben, dass ein Wert optional sein kann (z. B. foto_datei: Optional[UploadFile]).
+
+
+
 
 from datetime import date
 from pathlib import Path

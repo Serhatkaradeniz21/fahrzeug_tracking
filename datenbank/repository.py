@@ -1,6 +1,23 @@
 # datenbank/repository.py
-# Dieses Modul dient als Schnittstelle zwischen der Anwendung und der Datenbank.
-# Ziel ist es, alle SQL-Abfragen zu kapseln und die Datenbankzugriffe sicher und effizient zu gestalten.
+# Schnittstelle zwischen Anwendung und Datenbank.
+#
+# Ziel:
+# - Kapselung aller SQL-Abfragen.
+# - Sicherer und effizienter Datenbankzugriff.
+#
+# Enthaltene Funktionen:
+# - hole_alle_fahrzeuge: Ruft alle Fahrzeuge ab.
+# - hole_fahrzeug_nach_id: Ruft ein Fahrzeug anhand der ID ab.
+# - fuege_fahrzeug_hinzu: Fügt ein neues Fahrzeug hinzu.
+# - aktualisiere_fahrzeug: Aktualisiert die Stammdaten eines Fahrzeugs.
+# - loesche_fahrzeug: Löscht ein Fahrzeug aus der Datenbank.
+# - speichere_km_eintrag: Speichert einen KM-Eintrag für ein Fahrzeug.
+# - hole_km_eintraege_fuer_fahrzeug: Ruft KM-Einträge für ein Fahrzeug ab.
+# - hole_letzten_km_eintrag_fuer_fahrzeug: Ruft den letzten KM-Eintrag für ein Fahrzeug ab.
+# - speichere_km_anforderung: Legt eine neue KM-Anforderung an.
+# - hole_km_anforderung_per_token: Holt eine KM-Anforderung anhand eines Tokens.
+# - hole_letzte_km_anforderung_fuer_fahrzeug: Holt die letzte KM-Anforderung eines Fahrzeugs.
+# - markiere_km_anforderung_verbraucht: Markiert eine Kilometeranforderung als verbraucht.
 
 from typing import Any, Dict, List, Optional
 from mysql.connector import Error
