@@ -1,3 +1,24 @@
+"""
+Dieses Modul wurde in der ersten Entwicklungsphase erstellt, um grundlegende Sicherheitsmechanismen
+für das FahrzeugTracking-System zu implementieren. Es umfasst:
+
+1. Passwort-Hashing und -Validierung (bcrypt):
+   - Sicherstellung, dass Passwörter niemals im Klartext gespeichert werden.
+   - Validierung von Passwörtern gegen gespeicherte Hashes.
+
+2. CSRF-Schutz:
+   - Generierung und Validierung von CSRF-Tokens, um Cross-Site-Request-Forgery-Angriffe zu verhindern.
+
+3. Eingabevalidierung:
+   - Überprüfung von Benutzereingaben wie Namen, Kilometerständen und Benutzernamen.
+
+4. Sanitizing:
+   - Entfernen gefährlicher Zeichen aus Benutzereingaben, um Sicherheitsrisiken zu minimieren.
+
+5. Sichere Log-Ausgabe:
+   - Vorbereitung von Log-Nachrichten, um sensible Daten zu schützen.
+"""
+
 # security.py
 # Sicherheitsmodul für das FahrzeugTracking-System.
 #

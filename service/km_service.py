@@ -1,3 +1,23 @@
+"""
+Die Datei `km_service.py` wurde in der vierten Entwicklungsphase erstellt und implementiert die
+Service-Schicht des FahrzeugTracking-Systems. Sie umfasst:
+
+1. Geschäftslogik für das Dashboard:
+   - Berechnung von Restkilometern, TÜV-Resttagen und Link-Status.
+
+2. Fahrzeugverwaltung:
+   - Methoden zum Anlegen, Bearbeiten und Löschen von Fahrzeugen.
+
+3. Kilometeranforderungen:
+   - Generierung von Token und Links für die Kilometerstandserfassung.
+
+4. Kilometerstandserfassung:
+   - Validierung und Speicherung von Kilometerständen.
+
+5. Wartungslogik:
+   - Prüfung von TÜV- und Ölwechsel-Schwellen und Versand von Warnmails.
+"""
+
 # service/km_service.py
 # Geschäftslogik für das FahrzeugTracking-System.
 #

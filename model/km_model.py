@@ -1,3 +1,17 @@
+"""
+Die Datei `km_model.py` wurde in der sechsten Entwicklungsphase erstellt und definiert die
+Datenmodelle des FahrzeugTracking-Systems. Sie umfasst:
+
+1. FahrzeugAnzeige:
+   - Repräsentiert ein Fahrzeug im Dashboard mit berechneten Feldern wie TÜV-Resttage.
+
+2. KilometerEingabeRequest:
+   - Beschreibt die Eingaben eines Fahrers für die Kilometerstandserfassung.
+
+3. KmAnforderungResponse:
+   - Antwortmodell für die Generierung eines Kilometeranforderungslinks.
+"""
+
 # model/km_model.py
 # Pydantic-Modelle für das FahrzeugTracking-System.
 #

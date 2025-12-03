@@ -1,4 +1,30 @@
 """
+Die Datei `km_controller.py` wurde in der dritten Entwicklungsphase erstellt und implementiert die
+Controller-Schicht des FahrzeugTracking-Systems. Sie umfasst:
+
+1. CSRF-Token-Management:
+   - Generierung und Validierung von CSRF-Tokens.
+
+2. Login- und Logout-Management:
+   - Routen für die Benutzeranmeldung und -abmeldung.
+
+3. Dashboard-Management:
+   - Anzeige aller Fahrzeuge und ihrer aktuellen Zustände.
+
+4. Fahrzeugverwaltung:
+   - Routen zum Anlegen, Bearbeiten und Löschen von Fahrzeugen.
+
+5. Kilometeranforderungen:
+   - Generierung von Links für die Kilometerstandserfassung.
+
+6. Kilometerstandserfassung:
+   - Verarbeitung der Eingaben von Fahrern.
+
+7. Historie:
+   - Anzeige der Kilometerstandshistorie eines Fahrzeugs.
+"""
+
+"""
 Dieses Modul definiert die HTTP-Routen und die zugehörige Logik für Benutzerinteraktionen.
 Es verbindet die Service-Schicht mit der Präsentationsschicht und stellt sicher, dass die
 richtigen Daten an die Templates übergeben werden.

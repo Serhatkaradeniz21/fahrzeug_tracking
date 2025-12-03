@@ -1,3 +1,20 @@
+"""
+Die Datei `repository.py` wurde in der fünften Entwicklungsphase erstellt und implementiert die
+Repository-Schicht des FahrzeugTracking-Systems. Sie umfasst:
+
+1. Datenbankoperationen für Fahrzeuge:
+   - Methoden zum Abrufen, Hinzufügen, Aktualisieren und Löschen von Fahrzeugen.
+
+2. Kilometerstandserfassung:
+   - Speicherung und Abruf von Kilometerständen.
+
+3. Kilometeranforderungen:
+   - Speicherung und Validierung von Token-basierten Anforderungen.
+
+4. Transaktionsmanagement:
+   - Sicherstellung der Datenkonsistenz bei komplexen Datenbankoperationen.
+"""
+
 # datenbank/repository.py
 # Schnittstelle zwischen Anwendung und Datenbank.
 #

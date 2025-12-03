@@ -1,3 +1,23 @@
+"""
+Die Datei `hauptprogramm.py` wurde in der zweiten Entwicklungsphase erstellt und dient als Einstiegspunkt
+für die Anwendung. Sie umfasst:
+
+1. Initialisierung der FastAPI-Anwendung:
+   - Definition von Titel, Beschreibung und Version der Anwendung.
+
+2. Middleware-Konfiguration:
+   - Hinzufügen von Sitzungs- und Sicherheits-Middleware.
+
+3. Routenregistrierung:
+   - Einbindung der Controller-Routen, insbesondere für die Kilometerverwaltung.
+
+4. Bereitstellung statischer Dateien:
+   - Zugriff auf CSS-Dateien, Bilder und hochgeladene Dateien.
+
+5. CSRF-Token-Management:
+   - Standardmäßige Generierung eines CSRF-Tokens pro Sitzung.
+"""
+
 # hauptprogramm.py
 # Einstiegspunkt der Anwendung. Hier wird die FastAPI-Anwendung konfiguriert und gestartet.
 #
