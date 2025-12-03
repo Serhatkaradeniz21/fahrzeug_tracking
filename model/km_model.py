@@ -21,9 +21,19 @@ class FahrzeugAnzeige(BaseModel):
     """
     Repräsentiert ein Fahrzeug im Dashboard.
 
-    - Enthält Stammdaten wie Kennzeichen und Bezeichnung.
-    - Berechnete Felder wie Restzeit bis TÜV oder Restkilometer bis Ölwechsel.
-    - Historische Daten wie der letzte Fahrername und das Datum der letzten Kilometer-Meldung.
+    Attribute:
+        id (int): Die eindeutige ID des Fahrzeugs.
+        kennzeichen (str): Das Kennzeichen des Fahrzeugs.
+        bezeichnung (str): Die Modellbezeichnung des Fahrzeugs.
+        aktueller_km (int): Der aktuelle Kilometerstand (muss >= 0 sein).
+        tuev_bis (Optional[date]): Das Datum, bis zu dem der TÜV gültig ist.
+        tuev_rest_tage (Optional[int]): Die verbleibenden Tage bis zum TÜV.
+        naechster_oelwechsel_km (Optional[int]): Die Kilometerzahl für den nächsten Ölwechsel.
+        rest_km_bis_oelwechsel (Optional[int]): Die verbleibenden Kilometer bis zum nächsten Ölwechsel.
+        letzter_fahrer_name (Optional[str]): Der Name des letzten Fahrers.
+        letzter_km_datum (Optional[datetime]): Das Datum der letzten Kilometer-Meldung.
+        letzter_link_versandt_am (Optional[datetime]): Das Datum, an dem der letzte Link versandt wurde.
+        link_noch_offen (bool): Gibt an, ob der letzte Link noch gültig ist.
     """
     id: int
     kennzeichen: str
@@ -59,9 +69,9 @@ class KilometerEingabeRequest(BaseModel):
     """
     Daten, die ein Fahrer im Kilometer-Formular eingibt.
 
-    Wichtige Punkte:
-    - `name_fahrer`: Der Name des Fahrers, muss mindestens 1 Zeichen lang sein.
-    - `kilometerstand`: Der eingegebene Kilometerstand, muss größer oder gleich 0 sein.
+    Attribute:
+        name_fahrer (str): Der Name des Fahrers (mindestens 1 Zeichen).
+        kilometerstand (int): Der eingegebene Kilometerstand (muss >= 0 sein).
     """
     name_fahrer: str = Field(min_length=1)
     kilometerstand: int = Field(ge=0)
@@ -75,10 +85,10 @@ class KmAnforderungResponse(BaseModel):
     """
     Antwortmodell für die Erzeugung eines Kilometer-Anforderungslinks.
 
-    Wichtige Punkte:
-    - `fahrzeug_id`: Die ID des Fahrzeugs, für das der Link erstellt wurde.
-    - `token`: Ein eindeutiger Token, der den Link sichert.
-    - `link_url`: Die URL, die der Fahrer aufrufen kann, um Kilometer einzugeben.
+    Attribute:
+        fahrzeug_id (int): Die ID des Fahrzeugs, für das der Link erstellt wurde.
+        token (str): Ein eindeutiger Token, der den Link sichert.
+        link_url (str): Die URL, die der Fahrer aufrufen kann, um Kilometer einzugeben.
     """
     fahrzeug_id: int
     token: str
