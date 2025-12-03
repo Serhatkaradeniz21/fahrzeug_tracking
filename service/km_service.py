@@ -57,8 +57,21 @@ def wert_oder_none(eintrag: dict, feld: str) -> Optional[Any]:
 # ---------------------------------------------------------
 
 class KilometerService:
+    """
+    Service-Klasse für die Geschäftslogik des FahrzeugTracking-Systems.
+
+    Diese Klasse stellt Methoden bereit, um Daten zwischen der Controller-Schicht
+    und der Datenbank zu verarbeiten. Sie enthält Logik für das Dashboard,
+    Fahrzeugverwaltung, Kilometeranforderungen und Wartungsprüfungen.
+
+    Attribute:
+        repo: Eine Instanz des KilometerRepository für den Datenbankzugriff.
+    """
+
     def __init__(self) -> None:
-        # Verbindung zur Datenbank aufbauen
+        """
+        Initialisiert den KilometerService und stellt die Verbindung zur Datenbank her.
+        """
         verbindung = get_db_verbindung()
         self.repo = KilometerRepository(verbindung)
 
@@ -68,10 +81,11 @@ class KilometerService:
 
     def hole_fahrzeuge_fuer_dashboard(self) -> List[FahrzeugAnzeige]:
         """
-        Holt alle Fahrzeuge und ergänzt sie um Anzeige-Infos wie TÜV-Resttage, Ölwechsel-Infos und Link-Status.
+        Holt alle Fahrzeuge und berechnet zusätzliche Anzeige-Informationen.
 
-        - Ruft die Rohdaten aus der Datenbank ab.
-        - Berechnet zusätzliche Informationen für die Anzeige im Dashboard.
+        Returns:
+            Eine Liste von FahrzeugAnzeige-Objekten mit berechneten Feldern wie
+            TÜV-Resttage, Restkilometer bis zum Ölwechsel und Link-Status.
         """
         roh_daten = self.repo.hole_alle_fahrzeuge()
         fahrzeuge: List[FahrzeugAnzeige] = []
@@ -129,8 +143,11 @@ class KilometerService:
         """
         Ruft die Basisdaten eines Fahrzeugs aus der Datenbank ab.
 
-        - `fahrzeug_id`: Die eindeutige ID des Fahrzeugs.
-        - Gibt ein Dictionary mit den Fahrzeugdaten zurück oder None, falls nicht gefunden.
+        Args:
+            fahrzeug_id: Die eindeutige ID des Fahrzeugs.
+
+        Returns:
+            Ein Dictionary mit den Fahrzeugdaten oder None, falls kein Fahrzeug gefunden wurde.
         """
         return self.repo.hole_fahrzeug_nach_id(fahrzeug_id)
 
@@ -145,8 +162,12 @@ class KilometerService:
         """
         Legt ein neues Fahrzeug in der Datenbank an.
 
-        - Alle Felder sind Pflichtfelder.
-        - Führt keine zusätzliche Validierung durch, da diese bereits im Controller erfolgt.
+        Args:
+            kennzeichen: Das Kennzeichen des Fahrzeugs.
+            bezeichnung: Die Modellbezeichnung des Fahrzeugs.
+            aktueller_km: Der aktuelle Kilometerstand des Fahrzeugs.
+            tuev_bis: Das Datum, bis zu dem der TÜV gültig ist.
+            naechster_oelwechsel_km: Die Kilometerzahl für den nächsten Ölwechsel.
         """
         self.repo.fuege_fahrzeug_hinzu(
             kennzeichen=kennzeichen,
@@ -168,9 +189,13 @@ class KilometerService:
         """
         Aktualisiert die Daten eines vorhandenen Fahrzeugs.
 
-        - Aktualisiert alle relevanten Felder in der Datenbank.
-        - Führt nach der Aktualisierung eine Überprüfung der Wartungs-Schwellen durch.
-        - Löst bei Bedarf Warnmails aus (z. B. bei TÜV oder Ölwechsel).
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs, das aktualisiert werden soll.
+            kennzeichen: Das neue Kennzeichen des Fahrzeugs.
+            bezeichnung: Die neue Modellbezeichnung des Fahrzeugs.
+            aktueller_km: Der aktualisierte Kilometerstand des Fahrzeugs.
+            tuev_bis: Das neue TÜV-Datum.
+            naechster_oelwechsel_km: Die neue Kilometerzahl für den nächsten Ölwechsel.
         """
         # Daten in der Datenbank aktualisieren
         self.repo.aktualisiere_fahrzeug(
@@ -194,6 +219,9 @@ class KilometerService:
     def loesche_fahrzeug(self, fahrzeug_id: int) -> None:
         """
         Entfernt ein Fahrzeug aus der Datenbank.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs, das gelöscht werden soll.
         """
         self.repo.loesche_fahrzeug(fahrzeug_id)
 
@@ -204,6 +232,12 @@ class KilometerService:
     def erzeuge_km_anforderung(self, fahrzeug_id: int) -> KmAnforderungResponse:
         """
         Erzeugt eine Kilometeranforderung mit Token und Link.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs, für das die Anforderung erstellt wird.
+
+        Returns:
+            Ein KmAnforderungResponse-Objekt mit den Details der Anforderung.
         """
         token = secrets.token_urlsafe(32)
         link_url = f"http://127.0.0.1:8000/km/eingabe/{token}"
@@ -228,7 +262,14 @@ class KilometerService:
     ) -> bool:
         """
         Verarbeitet eine Kilometer-Eingabe basierend auf einem Token.
-        Nach dem Speichern werden TÜV- und Ölwechsel-Schwellen geprüft.
+
+        Args:
+            token: Der Token, der die Eingabe authentifiziert.
+            daten: Ein KilometerEingabeRequest-Objekt mit den Eingabedaten.
+            foto_pfad: Der Pfad zum Foto des Kilometerstands (optional).
+
+        Returns:
+            True, wenn die Eingabe erfolgreich verarbeitet wurde, andernfalls False.
         """
         km_anforderung = self.repo.hole_km_anforderung_per_token(token)
         if not km_anforderung:
@@ -271,7 +312,13 @@ class KilometerService:
 
     def hole_km_historie(self, fahrzeug_id: int) -> List[Dict[str, Any]]:
         """
-        Liefert die KM-Historie für ein Fahrzeug.
+        Liefert die Kilometer-Historie für ein Fahrzeug.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs.
+
+        Returns:
+            Eine Liste von Dictionaries mit den Kilometer-Einträgen.
         """
         return self.repo.hole_km_eintraege_fuer_fahrzeug(fahrzeug_id)
 
@@ -282,7 +329,9 @@ class KilometerService:
     def _pruefe_wartungen_und_benachrichtigen(self, fahrzeug: Dict[str, Any]) -> None:
         """
         Prüft TÜV- und Ölwechsel-Schwellen und verschickt bei Bedarf Warnmails.
-        Wird nach jeder neuen Kilometer-Eingabe oder manuellen Aktualisierung aufgerufen.
+
+        Args:
+            fahrzeug: Ein Dictionary mit den Fahrzeugdaten.
         """
         empfaenger = os.getenv("DISPONENT_EMAIL", "karadeniz.serhat21@gmail.com")
 
@@ -341,8 +390,11 @@ class KilometerService:
     def _sende_warnmail(self, empfaenger: str, betreff: str, text: str) -> None:
         """
         Versendet eine Warnmail.
-        Im Prototyp wird zunächst versucht, über localhost:1025 zu senden
-        (z.B. mit MailHog). Bei Fehlern wird nur eine Meldung in der Konsole ausgegeben.
+
+        Args:
+            empfaenger: Die E-Mail-Adresse des Empfängers.
+            betreff: Der Betreff der E-Mail.
+            text: Der Inhalt der E-Mail.
         """
         absender = os.getenv("MAIL_ABSENDER", "karadeniz.serhat21@gmail.com")
 

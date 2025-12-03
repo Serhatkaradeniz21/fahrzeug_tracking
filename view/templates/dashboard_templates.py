@@ -1,21 +1,8 @@
-# dashboard_templates.py
-# Funktionen zur Erstellung des Dashboards.
-#
-# Ziel:
-# - Dynamische Generierung der Fahrzeugübersicht.
-# - Einbindung von CSRF-Schutz in Formularen.
-#
-# Enthaltene Funktionen:
-# - render_dashboard: Erstellt die HTML-Seite für das Dashboard.
-
 from typing import List
 from .base_templates import layout
 from model.km_model import FahrzeugAnzeige
 
 def render_dashboard(fahrzeuge: List[FahrzeugAnzeige], csrf_token: str) -> str:
-    """
-    Erstellt die HTML-Seite für das Dashboard mit der Übersicht der Fahrzeuge.
-    """
     zeilen = ""
 
     for f in fahrzeuge:
@@ -39,7 +26,6 @@ def render_dashboard(fahrzeuge: List[FahrzeugAnzeige], csrf_token: str) -> str:
 
         status = "Offen" if f.link_noch_offen else "Erledigt"
 
-        # Dynamische Zeilen für die Fahrzeugübersichtstabelle
         zeilen += f"""
         <tr>
             <td>{f.id}</td>
@@ -81,10 +67,9 @@ def render_dashboard(fahrzeuge: List[FahrzeugAnzeige], csrf_token: str) -> str:
         </tr>
         """
 
-    # HTML-Inhalt für das Dashboard zusammenstellen
     inhalt = f"""
         <div class="kopfzeile">
-            <h1>Fahrzeug-Dashboard</h1>
+            <h1><a href="/dashboard">Fahrzeug-Dashboard</a></h1>
             <div class="kopf-buttons">
                 <a href="/fahrzeug/neu" class="btn-primar">Neues Fahrzeug</a>
                 <a href="/logout" class="btn-zweit">Logout</a>

@@ -24,8 +24,24 @@ from mysql.connector import Error
 
 
 class KilometerRepository:
+    """
+    Repository-Klasse für den Zugriff auf die Kilometer-Datenbank.
+
+    Diese Klasse kapselt alle Datenbankoperationen, die mit Fahrzeugen, Kilometer-Einträgen
+    und Kilometer-Anforderungen zusammenhängen. Sie stellt Methoden bereit, um Daten
+    sicher und effizient zu lesen, zu schreiben und zu aktualisieren.
+
+    Attribute:
+        verbindung: Die Verbindung zur Datenbank.
+    """
+
     def __init__(self, verbindung) -> None:
-        # Initialisiert die Verbindung zur Datenbank
+        """
+        Initialisiert die Verbindung zur Datenbank.
+
+        Args:
+            verbindung: Eine aktive Verbindung zur Datenbank.
+        """
         self.verbindung = verbindung
 
     # ---------------------------------------------------------
@@ -36,8 +52,9 @@ class KilometerRepository:
         """
         Ruft alle Fahrzeuge aus der Datenbank ab.
 
-        - Gibt eine Liste von Dictionaries zurück, die die wichtigsten Fahrzeugdaten enthalten.
-        - Jedes Dictionary enthält Felder wie Kennzeichen, Modell und Kilometerstand.
+        Returns:
+            Eine Liste von Dictionaries, die die wichtigsten Fahrzeugdaten enthalten.
+            Jedes Dictionary enthält Felder wie Kennzeichen, Modell und Kilometerstand.
         """
         cursor = self.verbindung.cursor(dictionary=True)
 
@@ -66,7 +83,12 @@ class KilometerRepository:
     ) -> Optional[Dict[str, Any]]:
         """
         Sucht ein Fahrzeug in der Datenbank anhand seiner ID.
-        Gibt ein Dictionary mit den Fahrzeugdaten zurück oder None, falls nicht gefunden.
+
+        Args:
+            fahrzeug_id: Die eindeutige ID des Fahrzeugs.
+
+        Returns:
+            Ein Dictionary mit den Fahrzeugdaten oder None, falls kein Fahrzeug gefunden wurde.
         """
         cursor = self.verbindung.cursor(dictionary=True) #dictionary=True für bessere Lesbarkeit
 
@@ -102,6 +124,13 @@ class KilometerRepository:
     ) -> None:
         """
         Fügt ein neues Fahrzeug in die Datenbank ein.
+
+        Args:
+            kennzeichen: Das Kennzeichen des Fahrzeugs.
+            bezeichnung: Die Modellbezeichnung des Fahrzeugs.
+            aktueller_km: Der aktuelle Kilometerstand des Fahrzeugs.
+            tuev_bis: Das Datum, bis zu dem der TÜV gültig ist.
+            naechster_oelwechsel_km: Die Kilometerzahl für den nächsten Ölwechsel (optional).
         """
         cursor = self.verbindung.cursor()
 
@@ -132,9 +161,13 @@ class KilometerRepository:
         """
         Aktualisiert die Stammdaten eines Fahrzeugs in der Datenbank.
 
-        - `fahrzeug_id`: Die ID des Fahrzeugs, das aktualisiert werden soll.
-        - Aktualisiert Felder wie Kennzeichen, Modell, Kilometerstand, TÜV-Datum und Ölwechsel.
-        - Führt die Änderungen in einer Transaktion aus.
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs, das aktualisiert werden soll.
+            kennzeichen: Das neue Kennzeichen des Fahrzeugs.
+            bezeichnung: Die neue Modellbezeichnung des Fahrzeugs.
+            aktueller_km: Der aktualisierte Kilometerstand des Fahrzeugs.
+            tuev_bis: Das neue TÜV-Datum.
+            naechster_oelwechsel_km: Die neue Kilometerzahl für den nächsten Ölwechsel (optional).
         """
         cursor = self.verbindung.cursor()
 
@@ -162,8 +195,8 @@ class KilometerRepository:
         """
         Löscht ein Fahrzeug aus der Datenbank.
 
-        - Entfernt auch zugehörige Kilometer-Einträge und Anforderungen.
-        - `fahrzeug_id`: Die ID des Fahrzeugs, das gelöscht werden soll.
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs, das gelöscht werden soll.
         """
         cursor = self.verbindung.cursor()
 
@@ -209,7 +242,14 @@ class KilometerRepository:
         foto_pfad: Optional[str] = None,
     ) -> None:
         """
-        Speichert einen KM-Eintrag und aktualisiert den KM-Stand des Fahrzeugs.
+        Speichert einen Kilometer-Eintrag und aktualisiert den Kilometerstand des Fahrzeugs.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs, für das der Eintrag erstellt wird.
+            fahrer_name: Der Name des Fahrers.
+            neuer_km: Der neue Kilometerstand.
+            token: Der Token, der die Eingabe authentifiziert.
+            foto_pfad: Der Pfad zum Foto des Kilometerstands (optional).
         """
         cursor = self.verbindung.cursor()
 
@@ -239,7 +279,14 @@ class KilometerRepository:
         self, fahrzeug_id: int, limit: int = 50
     ) -> List[Dict[str, Any]]:
         """
-        Liefert die letzten KM-Einträge für ein Fahrzeug.
+        Liefert die letzten Kilometer-Einträge für ein Fahrzeug.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs.
+            limit: Die maximale Anzahl der zurückzugebenden Einträge (Standard: 50).
+
+        Returns:
+            Eine Liste von Dictionaries mit den Kilometer-Einträgen.
         """
         cursor = self.verbindung.cursor(dictionary=True)
 
@@ -272,7 +319,13 @@ class KilometerRepository:
         self, fahrzeug_id: int
     ) -> Optional[Dict[str, Any]]:
         """
-        Liefert den letzten KM-Eintrag eines Fahrzeugs.
+        Liefert den letzten Kilometer-Eintrag eines Fahrzeugs.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs.
+
+        Returns:
+            Ein Dictionary mit den Daten des letzten Kilometer-Eintrags oder None, falls kein Eintrag vorhanden ist.
         """
         cursor = self.verbindung.cursor(dictionary=True)
 
@@ -300,7 +353,11 @@ class KilometerRepository:
 
     def speichere_km_anforderung(self, fahrzeug_id: int, token: str) -> None:
         """
-        Legt eine neue KM-Anforderung mit Token an.
+        Legt eine neue Kilometer-Anforderung mit Token an.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs, für das die Anforderung erstellt wird.
+            token: Der Token, der die Anforderung identifiziert.
         """
         cursor = self.verbindung.cursor()
 
@@ -319,7 +376,13 @@ class KilometerRepository:
         self, token: str
     ) -> Optional[Dict[str, Any]]:
         """
-        Holt eine KM-Anforderung anhand eines Tokens.
+        Holt eine Kilometer-Anforderung anhand eines Tokens.
+
+        Args:
+            token: Der Token, der die Anforderung identifiziert.
+
+        Returns:
+            Ein Dictionary mit den Daten der Anforderung oder None, falls keine Anforderung gefunden wurde.
         """
         cursor = self.verbindung.cursor(dictionary=True)
 
@@ -347,7 +410,13 @@ class KilometerRepository:
         self, fahrzeug_id: int
     ) -> Optional[Dict[str, Any]]:
         """
-        Holt die letzte KM-Anforderung eines Fahrzeugs.
+        Holt die letzte Kilometer-Anforderung eines Fahrzeugs.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs.
+
+        Returns:
+            Ein Dictionary mit den Daten der letzten Anforderung oder None, falls keine Anforderung vorhanden ist.
         """
         cursor = self.verbindung.cursor(dictionary=True)
 
@@ -376,7 +445,10 @@ class KilometerRepository:
 
     def markiere_km_anforderung_verbraucht(self, anforderung_id: int) -> None:
         """
-        Markiert eine Kilometeranforderung als verbraucht.
+        Markiert eine Kilometer-Anforderung als verbraucht.
+
+        Args:
+            anforderung_id: Die ID der Anforderung, die als verbraucht markiert werden soll.
         """
         cursor = self.verbindung.cursor()
 
