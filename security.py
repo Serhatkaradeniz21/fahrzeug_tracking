@@ -1,39 +1,41 @@
 """
-Dieses Modul wurde in der ersten Entwicklungsphase erstellt, um grundlegende Sicherheitsmechanismen
-für das FahrzeugTracking-System zu implementieren. Es umfasst:
+# Sicherheitsmodul für das FahrzeugTracking-System
 
-1. Passwort-Hashing und -Validierung (bcrypt):
-   - Sicherstellung, dass Passwörter niemals im Klartext gespeichert werden.
-   - Validierung von Passwörtern gegen gespeicherte Hashes.
+## Enthaltene Funktionen:
 
-2. CSRF-Schutz:
-   - Generierung und Validierung von CSRF-Tokens, um Cross-Site-Request-Forgery-Angriffe zu verhindern.
+### 1. Systemkonfiguration
+- `GEHEIMER_SCHLUESSEL`: Geheimschlüssel für HMAC-Signaturen.
+- `DISPONENT_BENUTZERNAME`: Standardbenutzername für den Disponenten.
+- `_DISPONENT_PASSWORT_HASH`: Gehashter Standardwert für das Passwort.
 
-3. Eingabevalidierung:
-   - Überprüfung von Benutzereingaben wie Namen, Kilometerständen und Benutzernamen.
+### 2. Passwort-Sicherheit
+- `erstelle_passwort_hash`: Erstellt sichere Passwort-Hashes.
+- `pruefe_passwort`: Validiert Passwörter gegen gespeicherte Hashes.
+- `pruefe_login`: Prüft die Login-Daten des Disponenten.
 
-4. Sanitizing:
-   - Entfernen gefährlicher Zeichen aus Benutzereingaben, um Sicherheitsrisiken zu minimieren.
+### 3. CSRF-Schutz
+- `erzeuge_csrf_token`: Generiert zufällige CSRF-Tokens.
+- `signiere_csrf_token`: Signiert CSRF-Tokens mit HMAC-SHA256.
+- `pruefe_signierten_csrf_token`: Überprüft die Gültigkeit eines signierten CSRF-Tokens.
 
-5. Sichere Log-Ausgabe:
-   - Vorbereitung von Log-Nachrichten, um sensible Daten zu schützen.
+### 4. Eingabevalidierung
+- `ist_name_gueltig`: Überprüft, ob ein Name gültig ist.
+- `ist_kilometerstand_gueltig`: Validiert Kilometerstände.
+- `ist_benutzername_gueltig`: Überprüft, ob ein Benutzername gültig ist.
+
+### 5. Sanitizing
+- `reinige_text_einfach`: Entfernt gefährliche Zeichen und escaped HTML.
+- `kuerze_text`: Kürzt Texte auf eine maximale Länge.
+
+### 6. Sichere Log-Ausgabe
+- `sichere_log_nachricht`: Bereitet Texte für Logfiles vor.
+
+### 7. Session-Prüfung
+- `ist_disponent_eingeloggt`: Prüft, ob ein Disponent eingeloggt ist.
 """
 
 # security.py
 # Sicherheitsmodul für das FahrzeugTracking-System.
-#
-# Ziel:
-# - Validierung von Benutzereingaben.
-# - Sichere Speicherung von Passwörtern.
-# - Schutz vor CSRF-Angriffen.
-#
-# Enthaltene Funktionen:
-# - erstelle_passwort_hash: Erstellt sichere Passwort-Hashes.
-# - pruefe_passwort: Validiert Passwörter gegen gespeicherte Hashes.
-# - erzeuge_csrf_token: Generiert CSRF-Tokens.
-# - signiere_csrf_token: Signiert CSRF-Tokens.
-# - pruefe_signierten_csrf_token: Validiert signierte CSRF-Tokens.
-
 # Dieses Modul enthält sicherheitsrelevante Funktionen für das FahrzeugTracking-System.
 # Ziel ist es, Benutzereingaben zu validieren, Passwörter sicher zu speichern und CSRF-Angriffe zu verhindern.
 
@@ -47,12 +49,13 @@ from typing import Optional
 
 import bcrypt
 from dotenv import load_dotenv
+from fastapi import Request
 
 # Lädt Umgebungsvariablen aus der .env-Datei
 load_dotenv()
 
 # ---------------------------------------------------------
-# SYSTEMKONFIGURATION
+#1 SYSTEMKONFIGURATION
 # ---------------------------------------------------------
 
 # Geheimschlüssel für HMAC-Signaturen (z. B. für CSRF-Tokens)
@@ -70,7 +73,7 @@ DISPONENT_BENUTZERNAME = os.getenv("DISPONENT_BENUTZERNAME", "disponent")
 _DISPONENT_PASSWORT_KLARTEXT = os.getenv("DISPONENT_PASSWORT", "Dispo123!")
 
 # ---------------------------------------------------------
-# PASSWORT-SICHERHEIT
+# 2 PASSWORT-SICHERHEIT
 # ---------------------------------------------------------
 
 def erstelle_passwort_hash(roh_passwort: str) -> str:
@@ -116,7 +119,7 @@ def pruefe_login(benutzername: str, passwort_klartext: str) -> bool:
 
 
 # ---------------------------------------------------------
-# CSRF-SCHUTZ (Token + Signatur)
+# 3 CSRF-SCHUTZ (Token + Signatur)
 # ---------------------------------------------------------
 
 def erzeuge_csrf_token() -> str:
@@ -136,7 +139,7 @@ def signiere_csrf_token(roher_token: str) -> str:
     - Der Hash ist durch die Kombination aus dem geheimen Schlüssel und dem Token einzigartig.
     """
     mac = hmac.new(GEHEIMER_SCHLUESSEL.encode(), roher_token.encode(), hashlib.sha256)
-    signatur = mac.hexdigest() # Hexadezimale Darstellung der Signatur
+    signatur = mac.hexdigest()  # Hexadezimale Darstellung der Signatur
     return f"{roher_token}.{signatur}"
 
 
@@ -148,20 +151,21 @@ def pruefe_signierten_csrf_token(signierter_token: str) -> bool:
         roher_token, signatur = signierter_token.split(".", 1)
     except ValueError:
         return False
+    # neue hmac signatur erstellen und vergleichen
     mac = hmac.new(GEHEIMER_SCHLUESSEL.encode(), roher_token.encode(), hashlib.sha256)
     erwartete_signatur = mac.hexdigest()
     return hmac.compare_digest(signatur, erwartete_signatur)
 
 
 # ---------------------------------------------------------
-# EINGABEVALIDIERUNG
+# 4 EINGABEVALIDIERUNG
 # ---------------------------------------------------------
 
 def ist_name_gueltig(name: str) -> bool:
     """
     Überprüft, ob ein Name gültig ist (z. B. Fahrername).
     """
-    if not name or len(name) > 100:
+    if not name or len(name) > 50:
         return False
     muster = r"^[a-zA-ZäöüÄÖÜß0-9\s.\-]+$"
     return re.match(muster, name) is not None
@@ -185,7 +189,7 @@ def ist_benutzername_gueltig(benutzername: str) -> bool:
 
 
 # ---------------------------------------------------------
-# SANITIZING
+# 5 SANITIZING
 # ---------------------------------------------------------
 
 def reinige_text_einfach(text: str) -> str:
@@ -195,7 +199,7 @@ def reinige_text_einfach(text: str) -> str:
     if text is None:
         return ""
     text = text.strip()
-    text = "".join(z for z in text if z.isprintable())# Entfernt nicht-druckbare Zeichen
+    text = "".join(z for z in text if z.isprintable())  # Entfernt nicht-druckbare Zeichen
     return html.escape(text)
 
 
@@ -208,7 +212,7 @@ def kuerze_text(text: str, maximale_laenge: int = 255) -> str:
 
 
 # ---------------------------------------------------------
-# SICHERE LOG-AUSGABE
+# 6 SICHERE LOG-AUSGABE
 # ---------------------------------------------------------
 
 def sichere_log_nachricht(nachricht: str) -> str:
@@ -217,3 +221,21 @@ def sichere_log_nachricht(nachricht: str) -> str:
     """
     nachricht = reinige_text_einfach(nachricht)
     return nachricht.replace("\n", " ").replace("\r", " ")
+
+
+# ---------------------------------------------------------
+# 7 Session prüfen
+# ---------------------------------------------------------
+
+def ist_disponent_eingeloggt(request: Request) -> bool:
+    """
+    Prüft, ob in der aktuellen Sitzung ein Disponent eingeloggt ist.
+
+    Diese Funktion kapselt den Zugriff auf die Session und wird z. B. vom
+    Controller genutzt, um geschützte Bereiche (Dashboard, Fahrzeugverwaltung,
+    Historie) abzusichern.
+    """
+    session = getattr(request, "session", None)
+    if not session:
+        return False
+    return session.get("eingeloggt") is True

@@ -1,40 +1,54 @@
 """
-Die Datei `repository.py` wurde in der fünften Entwicklungsphase erstellt und implementiert die
-Repository-Schicht des FahrzeugTracking-Systems. Sie umfasst:
+# Repository-Schicht für das FahrzeugTracking-System
 
-1. Datenbankoperationen für Fahrzeuge:
-   - Methoden zum Abrufen, Hinzufügen, Aktualisieren und Löschen von Fahrzeugen.
+## Enthaltene Kategorien und Funktionen:
 
-2. Kilometerstandserfassung:
-   - Speicherung und Abruf von Kilometerständen.
+### 1. Fahrzeuge
+- `hole_alle_fahrzeuge`
+- `hole_fahrzeug_nach_id`
+- `fuege_fahrzeug_hinzu`
+- `aktualisiere_fahrzeug`
+- `loesche_fahrzeug`
 
-3. Kilometeranforderungen:
-   - Speicherung und Validierung von Token-basierten Anforderungen.
+### 2. Fahrzeug-Operationen
+- `speichere_fahrzeug`
 
-4. Transaktionsmanagement:
-   - Sicherstellung der Datenkonsistenz bei komplexen Datenbankoperationen.
+### 3. Kilometer-Einträge
+- `speichere_km_eintrag`
+- `hole_km_eintraege_fuer_fahrzeug`
+- `hole_letzten_km_eintrag_fuer_fahrzeug`
+
+### 4. Kilometer-Anforderungen (Token)
+- `speichere_km_anforderung`
+- `hole_km_anforderung_per_token`
+- `hole_letzte_km_anforderung_fuer_fahrzeug`
+- `markiere_km_anforderung_verbraucht`
 """
 
-# datenbank/repository.py
-# Schnittstelle zwischen Anwendung und Datenbank.
-#
-# Ziel:
-# - Kapselung aller SQL-Abfragen.
-# - Sicherer und effizienter Datenbankzugriff.
-#
-# Enthaltene Funktionen:
-# - hole_alle_fahrzeuge: Ruft alle Fahrzeuge ab.
-# - hole_fahrzeug_nach_id: Ruft ein Fahrzeug anhand der ID ab.
-# - fuege_fahrzeug_hinzu: Fügt ein neues Fahrzeug hinzu.
-# - aktualisiere_fahrzeug: Aktualisiert die Stammdaten eines Fahrzeugs.
-# - loesche_fahrzeug: Löscht ein Fahrzeug aus der Datenbank.
-# - speichere_km_eintrag: Speichert einen KM-Eintrag für ein Fahrzeug.
-# - hole_km_eintraege_fuer_fahrzeug: Ruft KM-Einträge für ein Fahrzeug ab.
-# - hole_letzten_km_eintrag_fuer_fahrzeug: Ruft den letzten KM-Eintrag für ein Fahrzeug ab.
-# - speichere_km_anforderung: Legt eine neue KM-Anforderung an.
-# - hole_km_anforderung_per_token: Holt eine KM-Anforderung anhand eines Tokens.
-# - hole_letzte_km_anforderung_fuer_fahrzeug: Holt die letzte KM-Anforderung eines Fahrzeugs.
-# - markiere_km_anforderung_verbraucht: Markiert eine Kilometeranforderung als verbraucht.
+"""
+Die Datei `repository.py` implementiert die Repository-Schicht des FahrzeugTracking-Systems. 
+Sie dient als Schnittstelle zwischen der Anwendung und der Datenbank und kapselt alle SQL-Abfragen, 
+um einen sicheren und effizienten Datenbankzugriff zu gewährleisten.
+
+Hauptabschnitte:
+
+1. Fahrzeuge:
+   - Methoden zum Abrufen, Hinzufügen, Aktualisieren und Löschen von Fahrzeugen.
+
+2. Fahrzeug-Operationen:
+   - Erweiterte Operationen wie das Speichern und Aktualisieren von Fahrzeugdaten.
+
+3. Kilometer-Einträge:
+   - Speicherung und Abruf von Kilometerständen für Fahrzeuge.
+
+4. Kilometer-Anforderungen (Token):
+   - Speicherung und Validierung von Token-basierten Anforderungen.
+
+Ziel:
+- Kapselung aller Datenbankoperationen.
+- Sicherstellung der Datenkonsistenz bei komplexen Operationen.
+- Bereitstellung einer klaren Schnittstelle für den Datenzugriff.
+"""
 
 from typing import Any, Dict, List, Optional
 from mysql.connector import Error
@@ -62,7 +76,7 @@ class KilometerRepository:
         self.verbindung = verbindung
 
     # ---------------------------------------------------------
-    # Fahrzeuge
+    # 1. Fahrzeuge
     # ---------------------------------------------------------
 
     def hole_alle_fahrzeuge(self) -> List[Dict[str, Any]]:
@@ -149,6 +163,47 @@ class KilometerRepository:
             tuev_bis: Das Datum, bis zu dem der TÜV gültig ist.
             naechster_oelwechsel_km: Die Kilometerzahl für den nächsten Ölwechsel (optional).
         """
+
+        cursor = self.verbindung.cursor()
+
+        try:
+            sql = """
+                INSERT INTO fahrzeuge
+                    (kennzeichen, modell, aktueller_km, tuev_bis, naechster_oelwechsel_km)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(
+                sql,
+                (kennzeichen, bezeichnung, aktueller_km, tuev_bis, naechster_oelwechsel_km),
+            )
+        except Error as fehler:
+            print("Fehler beim Anlegen eines Fahrzeugs:", fehler)
+        finally:
+            cursor.close()
+
+    # ---------------------------------------------------------
+    # 2. Fahrzeug-Operationen
+    # ---------------------------------------------------------
+
+    def speichere_fahrzeug(
+        self,
+        kennzeichen: str,
+        bezeichnung: str,
+        aktueller_km: int,
+        tuev_bis,
+        naechster_oelwechsel_km: Optional[int],
+    ) -> None:
+        """
+        Speichert ein neues Fahrzeug in der Datenbank.
+
+        Args:
+            kennzeichen: Das Kennzeichen des Fahrzeugs.
+            bezeichnung: Die Modellbezeichnung des Fahrzeugs.
+            aktueller_km: Der aktuelle Kilometerstand des Fahrzeugs.
+            tuev_bis: Das Datum, bis zu dem der TÜV gültig ist.
+            naechster_oelwechsel_km: Die Kilometerzahl für den nächsten Ölwechsel (optional).
+        """
+
         cursor = self.verbindung.cursor()
 
         try:
@@ -186,6 +241,7 @@ class KilometerRepository:
             tuev_bis: Das neue TÜV-Datum.
             naechster_oelwechsel_km: Die neue Kilometerzahl für den nächsten Ölwechsel (optional).
         """
+
         cursor = self.verbindung.cursor()
 
         try:
@@ -215,6 +271,7 @@ class KilometerRepository:
         Args:
             fahrzeug_id: Die ID des Fahrzeugs, das gelöscht werden soll.
         """
+
         cursor = self.verbindung.cursor()
 
         try:
@@ -247,7 +304,7 @@ class KilometerRepository:
             cursor.close()
 
     # ---------------------------------------------------------
-    # KM-Einträge
+    # 3. Kilometer-Einträge
     # ---------------------------------------------------------
 
     def speichere_km_eintrag(
@@ -268,6 +325,7 @@ class KilometerRepository:
             token: Der Token, der die Eingabe authentifiziert.
             foto_pfad: Der Pfad zum Foto des Kilometerstands (optional).
         """
+
         cursor = self.verbindung.cursor()
 
         try:
@@ -305,6 +363,7 @@ class KilometerRepository:
         Returns:
             Eine Liste von Dictionaries mit den Kilometer-Einträgen.
         """
+
         cursor = self.verbindung.cursor(dictionary=True)
 
         try:
@@ -317,7 +376,7 @@ class KilometerRepository:
                     fahrer_name,
                     token,
                     foto_pfad,
-                    erfasst_am
+                    erfasst_am as datum
                 FROM km_eintraege
                 WHERE fahrzeug_id = %s
                 ORDER BY erfasst_am DESC
@@ -344,6 +403,7 @@ class KilometerRepository:
         Returns:
             Ein Dictionary mit den Daten des letzten Kilometer-Eintrags oder None, falls kein Eintrag vorhanden ist.
         """
+
         cursor = self.verbindung.cursor(dictionary=True)
 
         try:
@@ -365,7 +425,7 @@ class KilometerRepository:
             cursor.close()
 
     # ---------------------------------------------------------
-    # KM-Anforderungen (Token)
+    # 4. Kilometer-Anforderungen (Token)
     # ---------------------------------------------------------
 
     def speichere_km_anforderung(self, fahrzeug_id: int, token: str) -> None:
@@ -376,6 +436,7 @@ class KilometerRepository:
             fahrzeug_id: Die ID des Fahrzeugs, für das die Anforderung erstellt wird.
             token: Der Token, der die Anforderung identifiziert.
         """
+
         cursor = self.verbindung.cursor()
 
         try:
@@ -401,6 +462,7 @@ class KilometerRepository:
         Returns:
             Ein Dictionary mit den Daten der Anforderung oder None, falls keine Anforderung gefunden wurde.
         """
+
         cursor = self.verbindung.cursor(dictionary=True)
 
         try:
@@ -435,6 +497,7 @@ class KilometerRepository:
         Returns:
             Ein Dictionary mit den Daten der letzten Anforderung oder None, falls keine Anforderung vorhanden ist.
         """
+
         cursor = self.verbindung.cursor(dictionary=True)
 
         try:
@@ -467,6 +530,7 @@ class KilometerRepository:
         Args:
             anforderung_id: Die ID der Anforderung, die als verbraucht markiert werden soll.
         """
+
         cursor = self.verbindung.cursor()
 
         try:

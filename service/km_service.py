@@ -1,50 +1,39 @@
 """
-Die Datei `km_service.py` wurde in der vierten Entwicklungsphase erstellt und implementiert die
-Service-Schicht des FahrzeugTracking-Systems. Sie umfasst:
+# Service-Schicht für das FahrzeugTracking-System
 
-1. Geschäftslogik für das Dashboard:
-   - Berechnung von Restkilometern, TÜV-Resttagen und Link-Status.
+## Enthaltene Kategorien und Funktionen:
 
-2. Fahrzeugverwaltung:
-   - Methoden zum Anlegen, Bearbeiten und Löschen von Fahrzeugen.
+### 1. Dashboard / Fahrzeugliste
+- `hole_fahrzeuge_fuer_dashboard`
 
-3. Kilometeranforderungen:
-   - Generierung von Token und Links für die Kilometerstandserfassung.
+### 2. Fahrzeugverwaltung
+- `hole_fahrzeug_details`
+- `erstelle_fahrzeug`
+- `aktualisiere_fahrzeug`
+- `loesche_fahrzeug`
 
-4. Kilometerstandserfassung:
-   - Validierung und Speicherung von Kilometerständen.
+### 3. KM-Anforderungen / Links
+- `erzeuge_km_anforderung`
 
-5. Wartungslogik:
-   - Prüfung von TÜV- und Ölwechsel-Schwellen und Versand von Warnmails.
+### 4. KM-Eingabe / Historie
+- `verarbeite_kilometer_eingabe`
+- `hole_km_historie`
+
+### 5. Wartungslogik
+- `_pruefe_wartungen_und_benachrichtigen`
+
+### 6. Hilfsfunktionen
+- `wert_oder_none`
+
+### 7. Mailversand
+- `_sende_warnmail`
 """
 
 # service/km_service.py
 # Geschäftslogik für das FahrzeugTracking-System.
-#
 # Ziel:
 # - Verbindung zwischen Controller-Schicht und Datenbank.
 # - Konsistente Verarbeitung der Daten.
-#
-# Enthaltene Kategorien und Funktionen:
-# 1. Dashboard / Fahrzeugliste:
-#    - hole_fahrzeuge_fuer_dashboard
-# 2. Fahrzeugverwaltung:
-#    - hole_fahrzeug_details
-#    - erstelle_fahrzeug
-#    - aktualisiere_fahrzeug
-#    - loesche_fahrzeug
-# 3. KM-Anforderungen / Links:
-#    - erzeuge_km_anforderung
-# 4. KM-Eingabe / Historie:
-#    - verarbeite_kilometer_eingabe
-#    - hole_km_historie
-# 5. Wartungslogik:
-#    - _pruefe_wartungen_und_benachrichtigen
-# 6. Hilfsfunktionen:
-#    - wert_oder_none
-# 7. Mailversand:
-#    - _sende_warnmail
-
 from typing import Optional, List, Dict, Any
 from datetime import date
 import os
@@ -59,6 +48,7 @@ from model.km_model import (
 from datenbank.repository import KilometerRepository
 from datenbank.verbindung import get_db_verbindung
 
+
 # ---------------------------------------------------------
 # Hilfsfunktionen
 # ---------------------------------------------------------
@@ -68,30 +58,17 @@ def wert_oder_none(eintrag: dict, feld: str) -> Optional[Any]:
     Hilfsfunktion, um sicher Werte aus einem Dictionary abzurufen.
 
     - Gibt den Wert des Feldes zurück oder None, falls das Feld nicht existiert.
-    - Wird häufig verwendet, um Fehler bei fehlenden Schlüsseln zu vermeiden.
     """
     return eintrag.get(feld) if eintrag else None
+
 
 # ---------------------------------------------------------
 # Geschäftslogik
 # ---------------------------------------------------------
 
 class KilometerService:
-    """
-    Service-Klasse für die Geschäftslogik des FahrzeugTracking-Systems.
-
-    Diese Klasse stellt Methoden bereit, um Daten zwischen der Controller-Schicht
-    und der Datenbank zu verarbeiten. Sie enthält Logik für das Dashboard,
-    Fahrzeugverwaltung, Kilometeranforderungen und Wartungsprüfungen.
-
-    Attribute:
-        repo: Eine Instanz des KilometerRepository für den Datenbankzugriff.
-    """
-
     def __init__(self) -> None:
-        """
-        Initialisiert den KilometerService und stellt die Verbindung zur Datenbank her.
-        """
+        # Verbindung zur Datenbank aufbauen
         verbindung = get_db_verbindung()
         self.repo = KilometerRepository(verbindung)
 
@@ -101,11 +78,8 @@ class KilometerService:
 
     def hole_fahrzeuge_fuer_dashboard(self) -> List[FahrzeugAnzeige]:
         """
-        Holt alle Fahrzeuge und berechnet zusätzliche Anzeige-Informationen.
-
-        Returns:
-            Eine Liste von FahrzeugAnzeige-Objekten mit berechneten Feldern wie
-            TÜV-Resttage, Restkilometer bis zum Ölwechsel und Link-Status.
+        Holt alle Fahrzeuge und ergänzt sie um Anzeige-Infos wie TÜV-Resttage,
+        Ölwechsel-Infos und Link-Status.
         """
         roh_daten = self.repo.hole_alle_fahrzeuge()
         fahrzeuge: List[FahrzeugAnzeige] = []
@@ -120,7 +94,7 @@ class KilometerService:
             datensatz["letzter_fahrer_name"] = wert_oder_none(letzter, "fahrer_name")
             datensatz["letzter_km_datum"] = wert_oder_none(letzter, "erfasst_am")
 
-            # TüV-Resttage berechnen
+            # TÜV-Resttage berechnen
             tuev_bis = datensatz.get("tuev_bis")
             if tuev_bis:
                 datensatz["tuev_rest_tage"] = (tuev_bis - heute).days
@@ -150,7 +124,6 @@ class KilometerService:
                 datensatz["letzter_link_versandt_am"] = None
                 datensatz["link_noch_offen"] = False
 
-            # Fahrzeugdaten in die Liste aufnehmen
             fahrzeuge.append(FahrzeugAnzeige(**datensatz))
 
         return fahrzeuge
@@ -162,12 +135,6 @@ class KilometerService:
     def hole_fahrzeug_details(self, fahrzeug_id: int) -> Optional[Dict[str, Any]]:
         """
         Ruft die Basisdaten eines Fahrzeugs aus der Datenbank ab.
-
-        Args:
-            fahrzeug_id: Die eindeutige ID des Fahrzeugs.
-
-        Returns:
-            Ein Dictionary mit den Fahrzeugdaten oder None, falls kein Fahrzeug gefunden wurde.
         """
         return self.repo.hole_fahrzeug_nach_id(fahrzeug_id)
 
@@ -181,13 +148,6 @@ class KilometerService:
     ) -> None:
         """
         Legt ein neues Fahrzeug in der Datenbank an.
-
-        Args:
-            kennzeichen: Das Kennzeichen des Fahrzeugs.
-            bezeichnung: Die Modellbezeichnung des Fahrzeugs.
-            aktueller_km: Der aktuelle Kilometerstand des Fahrzeugs.
-            tuev_bis: Das Datum, bis zu dem der TÜV gültig ist.
-            naechster_oelwechsel_km: Die Kilometerzahl für den nächsten Ölwechsel.
         """
         self.repo.fuege_fahrzeug_hinzu(
             kennzeichen=kennzeichen,
@@ -207,17 +167,9 @@ class KilometerService:
         naechster_oelwechsel_km: int,
     ) -> None:
         """
-        Aktualisiert die Daten eines vorhandenen Fahrzeugs.
-
-        Args:
-            fahrzeug_id: Die ID des Fahrzeugs, das aktualisiert werden soll.
-            kennzeichen: Das neue Kennzeichen des Fahrzeugs.
-            bezeichnung: Die neue Modellbezeichnung des Fahrzeugs.
-            aktueller_km: Der aktualisierte Kilometerstand des Fahrzeugs.
-            tuev_bis: Das neue TÜV-Datum.
-            naechster_oelwechsel_km: Die neue Kilometerzahl für den nächsten Ölwechsel.
+        Aktualisiert die Daten eines vorhandenen Fahrzeugs und stößt danach
+        die Wartungsprüfung an.
         """
-        # Daten in der Datenbank aktualisieren
         self.repo.aktualisiere_fahrzeug(
             fahrzeug_id=fahrzeug_id,
             kennzeichen=kennzeichen,
@@ -227,21 +179,16 @@ class KilometerService:
             naechster_oelwechsel_km=naechster_oelwechsel_km,
         )
 
-        # Aktualisierte Fahrzeugdaten holen
         fahrzeug_nach_update = self.repo.hole_fahrzeug_nach_id(fahrzeug_id)
         print("WARTUNGSPRUEFUNG STARTET")
         print("Fahrzeugdaten:", fahrzeug_nach_update)
 
         if fahrzeug_nach_update:
-            # Wartungslogik auf Basis der aktuellen Daten anstoßen
             self._pruefe_wartungen_und_benachrichtigen(fahrzeug_nach_update)
 
     def loesche_fahrzeug(self, fahrzeug_id: int) -> None:
         """
         Entfernt ein Fahrzeug aus der Datenbank.
-
-        Args:
-            fahrzeug_id: Die ID des Fahrzeugs, das gelöscht werden soll.
         """
         self.repo.loesche_fahrzeug(fahrzeug_id)
 
@@ -252,12 +199,6 @@ class KilometerService:
     def erzeuge_km_anforderung(self, fahrzeug_id: int) -> KmAnforderungResponse:
         """
         Erzeugt eine Kilometeranforderung mit Token und Link.
-
-        Args:
-            fahrzeug_id: Die ID des Fahrzeugs, für das die Anforderung erstellt wird.
-
-        Returns:
-            Ein KmAnforderungResponse-Objekt mit den Details der Anforderung.
         """
         token = secrets.token_urlsafe(32)
         link_url = f"http://127.0.0.1:8000/km/eingabe/{token}"
@@ -279,37 +220,49 @@ class KilometerService:
         token: str,
         daten: KilometerEingabeRequest,
         foto_pfad: Optional[str] = None,
-    ) -> bool:
+    ) -> str:
         """
         Verarbeitet eine Kilometer-Eingabe basierend auf einem Token.
 
-        Args:
-            token: Der Token, der die Eingabe authentifiziert.
-            daten: Ein KilometerEingabeRequest-Objekt mit den Eingabedaten.
-            foto_pfad: Der Pfad zum Foto des Kilometerstands (optional).
+        Rückgabewert (Status-String):
+        - "ok"                -> alles gut, gespeichert
+        - "token_ungueltig"   -> Token existiert nicht (oder wird nicht gefunden)
+        - "fahrzeug_fehlt"    -> Fahrzeug existiert nicht (mehr)
 
-        Returns:
-            True, wenn die Eingabe erfolgreich verarbeitet wurde, andernfalls False.
+        Die KM-Plausibilitätsprüfung (neuer KM < aktueller KM) gibt nur eine Warnung
+        in der Konsole aus, blockiert aber nicht den Speichervorgang.
         """
+        print("DEBUG: verarbeite_kilometer_eingabe gestartet")
+        print("DEBUG: Token:", token)
+        print("DEBUG: Daten:", daten)
+
         km_anforderung = self.repo.hole_km_anforderung_per_token(token)
+        print("DEBUG: km_anforderung:", km_anforderung)
+
         if not km_anforderung:
-            return False
+            print("DEBUG: Keine KM-Anforderung gefunden – Token ungültig oder nicht in DB.")
+            return "token_ungueltig"
 
         fahrzeug_id = km_anforderung["fahrzeug_id"]
 
-        
         fahrzeug = self.repo.hole_fahrzeug_nach_id(fahrzeug_id)
+        print("DEBUG: fahrzeug:", fahrzeug)
         if not fahrzeug:
-            return False
+            print("DEBUG: Kein Fahrzeug zur fahrzeug_id gefunden.")
+            return "fahrzeug_fehlt"
 
-        aktueller_km = fahrzeug.get("aktueller_km", 0)
+        aktueller_km = fahrzeug.get("aktueller_km", 0) or 0
+        print("DEBUG: aktueller_km:", aktueller_km)
+        print("DEBUG: eingegebener_km:", daten.kilometerstand)
 
-        #KM-PRÜFUNG
+        # Nur Warnung, keine Blockade
         if daten.kilometerstand < aktueller_km:
-            print("KM-Eingabe zu niedrig – wird abgelehnt.")
-            return False
+            print(
+                f"Warnung: KM-Eingabe ({daten.kilometerstand}) liegt unter aktuellem KM "
+                f"({aktueller_km}). Eintrag wird trotzdem verarbeitet."
+            )
 
-        #KM-Eintrag speichern (inkl. Foto, falls vorhanden)
+        # KM-Eintrag speichern (inkl. Foto, falls vorhanden)
         self.repo.speichere_km_eintrag(
             fahrzeug_id=fahrzeug_id,
             fahrer_name=daten.name_fahrer,
@@ -327,18 +280,14 @@ class KilometerService:
         if fahrzeug:
             self._pruefe_wartungen_und_benachrichtigen(fahrzeug)
 
-        return True
-        
+        print("DEBUG: KM-Eingabe erfolgreich verarbeitet.")
+        return "ok"
 
     def hole_km_historie(self, fahrzeug_id: int) -> List[Dict[str, Any]]:
         """
-        Liefert die Kilometer-Historie für ein Fahrzeug.
+        Liefert die KM-Historie für ein Fahrzeug.
 
-        Args:
-            fahrzeug_id: Die ID des Fahrzeugs.
-
-        Returns:
-            Eine Liste von Dictionaries mit den Kilometer-Einträgen.
+        Wird vom Controller in /fahrzeug/{fahrzeug_id}/historie aufgerufen.
         """
         return self.repo.hole_km_eintraege_fuer_fahrzeug(fahrzeug_id)
 
@@ -349,9 +298,7 @@ class KilometerService:
     def _pruefe_wartungen_und_benachrichtigen(self, fahrzeug: Dict[str, Any]) -> None:
         """
         Prüft TÜV- und Ölwechsel-Schwellen und verschickt bei Bedarf Warnmails.
-
-        Args:
-            fahrzeug: Ein Dictionary mit den Fahrzeugdaten.
+        Wird nach jeder neuen Kilometer-Eingabe oder manuellen Aktualisierung aufgerufen.
         """
         empfaenger = os.getenv("DISPONENT_EMAIL", "karadeniz.serhat21@gmail.com")
 
@@ -376,7 +323,6 @@ class KilometerService:
         naechster_oel_km = fahrzeug.get("naechster_oelwechsel_km")
 
         if naechster_oel_km is not None and naechster_oel_km > 0:
-            # Letzter Ölwechsel = naechster_oelwechsel_km - 15.000
             basis_letzter_oelwechsel = naechster_oel_km - 15000
             km_seit_letztem_oel = aktueller_km - basis_letzter_oelwechsel
 
@@ -404,24 +350,31 @@ class KilometerService:
                 self._sende_warnmail(empfaenger, betreff, text)
 
     # ---------------------------------------------------------
-    # Mailversand (Prototyp, z.B. mit MailHog)
+    # Mailversand (Prototyp, z.B. mit MailHog, UTF-8)
     # ---------------------------------------------------------
 
     def _sende_warnmail(self, empfaenger: str, betreff: str, text: str) -> None:
         """
         Versendet eine Warnmail.
 
-        Args:
-            empfaenger: Die E-Mail-Adresse des Empfängers.
-            betreff: Der Betreff der E-Mail.
-            text: Der Inhalt der E-Mail.
+        - Verwendet UTF-8, damit Umlaute wie Ü/Ö/Ä korrekt übertragen werden.
+        - Im Prototyp wird über localhost:1025 gesendet (z.B. MailHog).
+        - Bei Fehlern wird nur eine Meldung in der Konsole ausgegeben.
         """
+        from email.mime.text import MIMEText
+        from email.header import Header
+        from email.utils import formataddr
+
         absender = os.getenv("MAIL_ABSENDER", "karadeniz.serhat21@gmail.com")
 
-        nachricht = f"Subject: {betreff}\nTo: {empfaenger}\nFrom: {absender}\n\n{text}"
+        msg = MIMEText(text, _charset="utf-8")
+        msg["Subject"] = Header(betreff, "utf-8")
+        msg["From"] = formataddr(("FahrzeugTracking", absender))
+        msg["To"] = empfaenger
+
         try:
             with smtplib.SMTP("localhost", 1025) as server:
-                server.sendmail(absender, [empfaenger], nachricht)
+                server.sendmail(absender, [empfaenger], msg.as_string())
             print(f"Warnmail versendet an {empfaenger}: {betreff}")
         except Exception as fehler:
             print("Warnmail konnte nicht gesendet werden:", fehler)

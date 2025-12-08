@@ -1,3 +1,12 @@
+"""
+# Datenbankverbindung für das FahrzeugTracking-System
+
+## Enthaltene Funktionen:
+
+### 1. Verbindungserstellung
+- `get_db_verbindung`: Erstellt eine Verbindung zur MySQL-Datenbank.
+"""
+
 # datenbank/verbindung.py
 # Stellt die Verbindung zur MySQL-Datenbank her.
 #
@@ -11,8 +20,8 @@
 # Dieses Modul stellt die Verbindung zur MySQL-Datenbank her.
 # Es lädt sensible Zugangsdaten aus einer .env-Datei und verwendet diese für die Verbindung.
 
-import os
-import mysql.connector
+import os # Betriebssystemmodul für Umgebungsvariablen
+import mysql.connector # MySQL-Connector-Paket
 from dotenv import load_dotenv  # Stellt sicher, dass Umgebungsvariablen geladen werden
 
 # .env-Datei einlesen (nur einmal beim Start)

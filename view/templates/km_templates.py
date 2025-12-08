@@ -51,19 +51,21 @@ def render_km_eingabe_formular(token: str, csrf_token: str, hinweis: str = "") -
 def render_km_danke_seite() -> str:
     """
     Danke-Seite nach erfolgreicher KM-Eingabe.
-    Wird aufgerufen in km_controller nach erfolgreichem verarbeite_kilometer_eingabe().
+    Wird im km_controller nach erfolgreichem verarbeite_kilometer_eingabe() aufgerufen.
+
+    Wichtig:
+    - Diese Seite ist für Fahrer bestimmt.
+    - Es gibt bewusst keinen Link ins Disponenten-Dashboard, um die Rollen sauber zu trennen.
     """
     inhalt = """
         <div class="seite-zentriert">
             <h1>Kilometerstand übermittelt</h1>
             <p>Vielen Dank! Die Daten wurden erfolgreich gespeichert.</p>
-
-            <div class="button-gruppe zentriert">
-                <a href="/dashboard" class="btn-primar">Zurück zum Dashboard</a>
-            </div>
+            <p>Du kannst dieses Fenster jetzt schließen.</p>
         </div>
     """
     return layout("KM-Erfassung abgeschlossen", inhalt)
+
 
 
 def render_km_link_anzeige(antwort: Any) -> str:
@@ -73,7 +75,6 @@ def render_km_link_anzeige(antwort: Any) -> str:
     km_controller:
         antwort = service.erzeuge_km_anforderung(fahrzeug_id)
         return render_km_link_anzeige(antwort)
-
     Wir erwarten hier typischerweise:
         antwort.fahrzeug  ODER  antwort["fahrzeug"]
         antwort.link_url  ODER  antwort["link_url"] / ["link"] / ["url"]

@@ -1,27 +1,30 @@
 """
-Die Datei `km_controller.py` wurde in der dritten Entwicklungsphase erstellt und implementiert die
-Controller-Schicht des FahrzeugTracking-Systems. Sie umfasst:
+# Controller-Schicht für das FahrzeugTracking-System
 
-1. CSRF-Token-Management:
-   - Generierung und Validierung von CSRF-Tokens.
+## Enthaltene Kategorien und Funktionen:
 
-2. Login- und Logout-Management:
-   - Routen für die Benutzeranmeldung und -abmeldung.
+### 1. CSRF-Token-Management
+- `generiere_und_speichere_csrf`
+- `csrf_pruefen`
 
-3. Dashboard-Management:
-   - Anzeige aller Fahrzeuge und ihrer aktuellen Zustände.
+### 2. Login- und Logout-Management
+- `login_get`
+- `login_post`
 
-4. Fahrzeugverwaltung:
-   - Routen zum Anlegen, Bearbeiten und Löschen von Fahrzeugen.
+### 3. Dashboard-Management
+- Anzeige aller Fahrzeuge und ihrer aktuellen Zustände.
 
-5. Kilometeranforderungen:
-   - Generierung von Links für die Kilometerstandserfassung.
+### 4. Fahrzeugverwaltung
+- Routen zum Anlegen, Bearbeiten und Löschen von Fahrzeugen.
 
-6. Kilometerstandserfassung:
-   - Verarbeitung der Eingaben von Fahrern.
+### 5. Kilometeranforderungen
+- Generierung von Links für die Kilometerstandserfassung.
 
-7. Historie:
-   - Anzeige der Kilometerstandshistorie eines Fahrzeugs.
+### 6. Kilometerstandserfassung
+- Verarbeitung der Eingaben von Fahrern.
+
+### 7. Historie
+- Anzeige der Kilometerstandshistorie eines Fahrzeugs.
 """
 
 """
@@ -59,9 +62,9 @@ from security import (
     ist_name_gueltig,
     reinige_text_einfach,
     pruefe_login,
+    ist_disponent_eingeloggt,
 )
 
-# 👉 NEUE IMPORTS – DIE EINZIG RICHTIGEN
 from view.templates.dashboard_templates import render_dashboard
 from view.templates.login_templates import render_login_seite
 from view.templates.km_templates import (
@@ -75,6 +78,7 @@ from view.templates.fahrzeug_templates import (
     render_fahrzeug_bearbeiten,
 )
 
+# *** GANZ WICHTIG: router MUSS HIER DEFINIERT SEIN ***
 router = APIRouter()
 service = KilometerService()
 
@@ -90,12 +94,6 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 def generiere_und_speichere_csrf(request: Request) -> str:
     """
     Generiert einen neuen CSRF-Token, signiert ihn und speichert ihn in der Sitzung.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-
-    Returns:
-        Der signierte CSRF-Token.
     """
     if "csrf_token" not in request.session:
         roher_token = erzeuge_csrf_token()
@@ -106,21 +104,23 @@ def generiere_und_speichere_csrf(request: Request) -> str:
 
 def csrf_pruefen(request: Request, empfangener_token: str) -> bool:
     """
-    Überprüft die Gültigkeit eines empfangenen CSRF-Tokens.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        empfangener_token: Der empfangene CSRF-Token.
-
-    Returns:
-        True, wenn der Token gültig ist, andernfalls False.
+    Überprüft die Gültigkeit eines empfangenen CSRF-Tokens und ob er bereits verwendet wurde.
     """
     gespeicherter = request.session.get("csrf_token")
-    if not gespeicherter:
+    token_verbraucht = request.session.get("csrf_token_verbraucht", False)
+
+    if not gespeicherter or token_verbraucht:
         return False
+
     if gespeicherter != empfangener_token:
         return False
-    return pruefe_signierten_csrf_token(empfangener_token)
+
+    if not pruefe_signierten_csrf_token(empfangener_token):
+        return False
+
+    # Markiere den Token als verbraucht
+    request.session["csrf_token_verbraucht"] = True
+    return True
 
 
 # ---------------------------------------------------------
@@ -129,49 +129,31 @@ def csrf_pruefen(request: Request, empfangener_token: str) -> bool:
 
 def pruefe_login_erforderlich(request: Request) -> bool:
     """
-    Überprüft, ob der Benutzer eingeloggt ist.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-
-    Returns:
-        True, wenn der Benutzer eingeloggt ist, andernfalls False.
+    Überprüft, ob der Benutzer (Disponent) eingeloggt ist.
+    Die eigentliche Session-Prüfung erfolgt zentral im Sicherheitsmodul.
     """
-    return request.session.get("eingeloggt") is True
+    return ist_disponent_eingeloggt(request)
 
 
 def login_oder_redirect(request: Request):
     """
     Leitet den Benutzer auf die Login-Seite weiter, falls er nicht eingeloggt ist.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-
-    Returns:
-        Eine RedirectResponse zur Login-Seite oder None, wenn der Benutzer eingeloggt ist.
+    Wird von allen geschützten Routen (z. B. Dashboard, Fahrzeugverwaltung, Historie) aufgerufen.
     """
     if not pruefe_login_erforderlich(request):
         return RedirectResponse("/login", status_code=302)
     return None
 
 
-# Login GET
 @router.get("/login", response_class=HTMLResponse)
 def login_get(request: Request):
     """
     Zeigt die Login-Seite an und generiert einen neuen CSRF-Token.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-
-    Returns:
-        Eine gerenderte HTML-Seite für den Login.
     """
     csrf = generiere_und_speichere_csrf(request)
     return render_login_seite(csrf_token=csrf)
 
 
-# Login POST
 @router.post("/login", response_class=HTMLResponse)
 def login_post(
     request: Request,
@@ -181,28 +163,22 @@ def login_post(
 ):
     """
     Verarbeitet die Login-Daten des Benutzers.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        benutzername: Der eingegebene Benutzername.
-        passwort: Das eingegebene Passwort.
-        csrf_token: Der empfangene CSRF-Token.
-
-    Returns:
-        Eine RedirectResponse zum Dashboard oder eine gerenderte Login-Seite bei Fehlern.
     """
     if not csrf_pruefen(request, csrf_token):
         neu = generiere_und_speichere_csrf(request)
-        return render_login_seite(csrf_token=neu, fehlermeldung="Ungültiger CSRF-Token.")
+        request.session["csrf_token_verbraucht"] = False  # Setze neuen Token als unverbraucht
+        return render_login_seite(csrf_token=neu, fehlermeldung="Ungültiger oder verbrauchter CSRF-Token.")
 
     if not ist_benutzername_gueltig(benutzername):
         neu = generiere_und_speichere_csrf(request)
+        request.session["csrf_token_verbraucht"] = False
         return render_login_seite(csrf_token=neu, fehlermeldung="Benutzername ungültig.")
 
     name = reinige_text_einfach(benutzername)
 
     if not pruefe_login(name, passwort):
         neu = generiere_und_speichere_csrf(request)
+        request.session["csrf_token_verbraucht"] = False
         return render_login_seite(csrf_token=neu, fehlermeldung="Login fehlgeschlagen.")
 
     request.session["eingeloggt"] = True
@@ -213,12 +189,6 @@ def login_post(
 def logout(request: Request):
     """
     Meldet den Benutzer ab und leitet zur Login-Seite weiter.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-
-    Returns:
-        Eine RedirectResponse zur Login-Seite.
     """
     request.session.clear()
     return RedirectResponse("/login", status_code=302)
@@ -232,16 +202,11 @@ def logout(request: Request):
 def dashboard(request: Request):
     """
     Zeigt das Dashboard mit einer Liste aller Fahrzeuge an.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-
-    Returns:
-        Eine gerenderte HTML-Seite für das Dashboard.
+    Nur für eingeloggte Disponenten zugänglich.
     """
-    fehlermeldung = login_oder_redirect(request)
-    if fehlermeldung:
-        return fehlermeldung
+    redirect = login_oder_redirect(request)
+    if redirect:
+        return redirect
 
     fahrzeuge = service.hole_fahrzeuge_fuer_dashboard()
     csrf = generiere_und_speichere_csrf(request)
@@ -256,16 +221,10 @@ def dashboard(request: Request):
 def fahrzeug_neu_get(request: Request):
     """
     Zeigt das Formular zum Anlegen eines neuen Fahrzeugs an.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-
-    Returns:
-        Eine gerenderte HTML-Seite für das Fahrzeugformular.
     """
-    fehlermeldung = login_oder_redirect(request)
-    if fehlermeldung:
-        return fehlermeldung
+    redirect = login_oder_redirect(request)
+    if redirect:
+        return redirect
     csrf = generiere_und_speichere_csrf(request)
     return render_fahrzeug_neu(csrf_token=csrf)
 
@@ -282,22 +241,10 @@ def fahrzeug_neu_post(
 ):
     """
     Verarbeitet die Eingaben zum Anlegen eines neuen Fahrzeugs.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        kennzeichen: Das Kennzeichen des Fahrzeugs.
-        bezeichnung: Die Modellbezeichnung des Fahrzeugs.
-        aktueller_km_wert: Der aktuelle Kilometerstand als String.
-        tuev_bis: Das TÜV-Datum.
-        naechster_oelwechsel_km_wert: Die Kilometerzahl für den nächsten Ölwechsel als String.
-        csrf_token: Der empfangene CSRF-Token.
-
-    Returns:
-        Eine RedirectResponse zum Dashboard oder eine gerenderte Fehlerseite.
     """
-    fehlermeldung = login_oder_redirect(request)
-    if fehlermeldung:
-        return fehlermeldung
+    redirect = login_oder_redirect(request)
+    if redirect:
+        return redirect
 
     if not csrf_pruefen(request, csrf_token):
         return RedirectResponse("/dashboard", status_code=302)
@@ -324,17 +271,10 @@ def fahrzeug_neu_post(
 def fahrzeug_bearbeiten_get(request: Request, fahrzeug_id: int):
     """
     Zeigt das Formular zum Bearbeiten eines bestehenden Fahrzeugs an.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        fahrzeug_id: Die ID des zu bearbeitenden Fahrzeugs.
-
-    Returns:
-        Eine gerenderte HTML-Seite für das Fahrzeugbearbeitungsformular.
     """
-    fehlermeldung = login_oder_redirect(request)
-    if fehlermeldung:
-        return fehlermeldung
+    redirect = login_oder_redirect(request)
+    if redirect:
+        return redirect
 
     fzg = service.hole_fahrzeug_details(fahrzeug_id)
     if not fzg:
@@ -357,23 +297,10 @@ def fahrzeug_bearbeiten_post(
 ):
     """
     Verarbeitet die Eingaben zum Bearbeiten eines bestehenden Fahrzeugs.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        fahrzeug_id: Die ID des zu bearbeitenden Fahrzeugs.
-        kennzeichen: Das Kennzeichen des Fahrzeugs.
-        bezeichnung: Die Modellbezeichnung des Fahrzeugs.
-        aktueller_km_wert: Der aktuelle Kilometerstand als String.
-        tuev_bis: Das TÜV-Datum.
-        naechster_oelwechsel_km_wert: Die Kilometerzahl für den nächsten Ölwechsel als String.
-        csrf_token: Der empfangene CSRF-Token.
-
-    Returns:
-        Eine RedirectResponse zum Dashboard oder eine gerenderte Fehlerseite.
     """
-    fehlermeldung = login_oder_redirect(request)
-    if fehlermeldung:
-        return fehlermeldung
+    redirect = login_oder_redirect(request)
+    if redirect:
+        return redirect
 
     if not csrf_pruefen(request, csrf_token):
         return RedirectResponse("/dashboard", status_code=302)
@@ -406,18 +333,10 @@ def fahrzeug_loeschen_post(
 ):
     """
     Löscht ein Fahrzeug aus der Datenbank.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        fahrzeug_id: Die ID des zu löschenden Fahrzeugs.
-        csrf_token: Der empfangene CSRF-Token.
-
-    Returns:
-        Eine RedirectResponse zum Dashboard.
     """
-    fehlermeldung = login_oder_redirect(request)
-    if fehlermeldung:
-        return fehlermeldung
+    redirect = login_oder_redirect(request)
+    if redirect:
+        return redirect
 
     if not csrf_pruefen(request, csrf_token):
         return RedirectResponse("/dashboard", status_code=302)
@@ -438,18 +357,10 @@ def km_anforderung_erzeugen(
 ):
     """
     Fordert einen neuen Kilometer-Link für ein Fahrzeug an.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        fahrzeug_id: Die ID des Fahrzeugs.
-        csrf_token: Der empfangene CSRF-Token.
-
-    Returns:
-        Eine gerenderte HTML-Seite mit dem Kilometer-Link.
     """
-    fehlermeldung = login_oder_redirect(request)
-    if fehlermeldung:
-        return fehlermeldung
+    redirect = login_oder_redirect(request)
+    if redirect:
+        return redirect
 
     if not csrf_pruefen(request, csrf_token):
         return RedirectResponse("/dashboard", status_code=302)
@@ -466,13 +377,6 @@ def km_anforderung_erzeugen(
 def km_eingabe_formular_anzeigen(request: Request, token: str):
     """
     Zeigt das Formular zur Eingabe der Kilometerstände durch den Fahrer an.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        token: Der eindeutige Token für die KM-Eingabe.
-
-    Returns:
-        Eine gerenderte HTML-Seite für das KM-Eingabeformular.
     """
     csrf = generiere_und_speichere_csrf(request)
     return render_km_eingabe_formular(token, csrf_token=csrf)
@@ -489,58 +393,66 @@ def km_eingabe_absenden(
 ):
     """
     Verarbeitet die Eingaben des Fahrers für die Kilometerstandserfassung.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        token: Der eindeutige Token für die KM-Eingabe.
-        name_fahrer: Der Name des Fahrers.
-        kilometerstand_wert: Der eingegebene Kilometerstand als String.
-        csrf_token: Der empfangene CSRF-Token.
-        foto_datei: Ein optionales Foto des Kilometerzählers.
-
-    Returns:
-        Eine gerenderte HTML-Seite für das KM-Eingabeformular oder die Dankeseite.
     """
+
+    # 1. CSRF prüfen
     if not csrf_pruefen(request, csrf_token):
         neu = generiere_und_speichere_csrf(request)
         return render_km_eingabe_formular(token, csrf_token=neu, hinweis="Ungültiger CSRF-Token.")
 
+    # 2. Fahrername prüfen
     if not ist_name_gueltig(name_fahrer):
         neu = generiere_und_speichere_csrf(request)
         return render_km_eingabe_formular(token, csrf_token=neu, hinweis="Ungültiger Fahrername.")
 
+    # 3. Kilometerstand in int umwandeln
     try:
         km = int(kilometerstand_wert)
     except ValueError:
         neu = generiere_und_speichere_csrf(request)
-        return render_km_eingabe_formular(token, csrf_token=neu, hinweis="Ungültiger Kilometerstand.")
+        return render_km_eingabe_formular(token, csrf_token=neu, hinweis="Ungültiger Kilometerstand (keine Zahl).")
 
+    # 4. Bereichsprüfung (nur grob, z.B. 0–2.000.000)
     if not ist_kilometerstand_gueltig(km):
         neu = generiere_und_speichere_csrf(request)
         return render_km_eingabe_formular(token, csrf_token=neu, hinweis="Plausiblen Kilometerstand eingeben.")
 
+    # 5. Name bereinigen
     name = reinige_text_einfach(name_fahrer)
 
-    foto_pfad_str = None
+    # 6. Foto speichern (optional)
     if foto_datei and foto_datei.filename:
-        dateiname = f"{token}_{foto_datei.filename}"
-        ziel = UPLOAD_DIR / dateiname
-        with ziel.open("wb") as f:
-            f.write(foto_datei.file.read())
+        ziel = UPLOAD_DIR / f"{token}_{foto_datei.filename}"
+        ziel.write_bytes(foto_datei.file.read())
         foto_pfad_str = str(ziel)
+    else:
+        foto_pfad_str = None
 
+    # 7. Datenobjekt für Service bauen
     daten = KilometerEingabeRequest(
         name_fahrer=name,
         kilometerstand=km,
     )
 
-    erfolg = service.verarbeite_kilometer_eingabe(token, daten, foto_pfad=foto_pfad_str)
+    # 8. Service aufrufen
+    status = service.verarbeite_kilometer_eingabe(token, daten, foto_pfad=foto_pfad_str)
 
-    if not erfolg:
-        neu = generiere_und_speichere_csrf(request)
-        return render_km_eingabe_formular(token, csrf_token=neu, hinweis="Link ungültig oder bereits genutzt.")
+    if status == "ok":
+        # HIER: Danke-Seite ohne Dashboard-Button (Template anpassen)
+        return render_km_danke_seite()
 
-    return render_km_danke_seite()
+    neu = generiere_und_speichere_csrf(request)
+
+    if status == "token_ungueltig":
+        hinweis = "Der Link ist ungültig oder wurde bereits verwendet."
+    elif status == "fahrzeug_fehlt":
+        hinweis = "Das zugehörige Fahrzeug existiert nicht mehr."
+    elif status == "km_zu_niedrig":
+        hinweis = "Der eingegebene Kilometerstand darf nicht kleiner als der aktuelle Stand des Fahrzeugs sein."
+    else:
+        hinweis = "Die Kilometer-Eingabe konnte nicht verarbeitet werden."
+
+    return render_km_eingabe_formular(token, csrf_token=neu, hinweis=hinweis)
 
 
 # ---------------------------------------------------------
@@ -551,17 +463,11 @@ def km_eingabe_absenden(
 def fahrzeug_historie(request: Request, fahrzeug_id: int):
     """
     Zeigt die Historie der Kilometerstände für ein Fahrzeug an.
-
-    Args:
-        request: Das aktuelle Request-Objekt.
-        fahrzeug_id: Die ID des Fahrzeugs.
-
-    Returns:
-        Eine gerenderte HTML-Seite mit der Fahrzeughistorie.
+    Nur für eingeloggte Disponenten zugänglich.
     """
-    fehlermeldung = login_oder_redirect(request)
-    if fehlermeldung:
-        return fehlermeldung
+    redirect = login_oder_redirect(request)
+    if redirect:
+        return redirect
 
     fahrzeug = service.hole_fahrzeug_details(fahrzeug_id)
     if not fahrzeug:

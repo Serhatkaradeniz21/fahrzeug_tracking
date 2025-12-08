@@ -1,32 +1,27 @@
 """
-Die Datei `hauptprogramm.py` wurde in der zweiten Entwicklungsphase erstellt und dient als Einstiegspunkt
-für die Anwendung. Sie umfasst:
+# Hauptprogramm für das FahrzeugTracking-System
 
-1. Initialisierung der FastAPI-Anwendung:
-   - Definition von Titel, Beschreibung und Version der Anwendung.
+## Enthaltene Funktionen:
 
-2. Middleware-Konfiguration:
-   - Hinzufügen von Sitzungs- und Sicherheits-Middleware.
+### 1. Initialisierung
+- `app`: Initialisiert die FastAPI-Anwendung.
 
-3. Routenregistrierung:
-   - Einbindung der Controller-Routen, insbesondere für die Kilometerverwaltung.
+### 2. Middleware-Konfiguration
+- Fügt Sitzungs- und Sicherheits-Middleware hinzu.
 
-4. Bereitstellung statischer Dateien:
-   - Zugriff auf CSS-Dateien, Bilder und hochgeladene Dateien.
+### 3. Routenregistrierung
+- Bindet die Controller-Routen ein.
 
-5. CSRF-Token-Management:
-   - Standardmäßige Generierung eines CSRF-Tokens pro Sitzung.
+### 4. Statische Dateien
+- Stellt CSS und andere Ressourcen bereit.
+
+### 5. CSRF-Token-Management
+- Generiert standardmäßig einen CSRF-Token pro Sitzung.
 """
 
 # hauptprogramm.py
 # Einstiegspunkt der Anwendung. Hier wird die FastAPI-Anwendung konfiguriert und gestartet.
 #
-# Enthaltene Funktionen:
-# - app: Initialisiert die FastAPI-Anwendung.
-# - Middleware-Konfiguration: Fügt Sitzungs- und Sicherheits-Middleware hinzu.
-# - Routenregistrierung: Bindet die Controller-Routen ein.
-# - Statische Dateien: Stellt CSS und andere Ressourcen bereit.
-
 # ---------------------------------------------------------
 # Voraussetzungen vor dem Start:
 # 1. Umgebungsvariablen:
