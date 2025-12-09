@@ -93,13 +93,24 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 def generiere_und_speichere_csrf(request: Request) -> str:
     """
-    Generiert einen neuen CSRF-Token, signiert ihn und speichert ihn in der Sitzung.
+    Generiert (bzw. erneuert) einen CSRF-Token, signiert ihn
+    und speichert ihn in der Sitzung.
+
+    Wichtig:
+    - Wenn noch kein Token existiert ODER der letzte als verbraucht
+      markiert wurde, wird ein neuer Token erzeugt und das
+      Verbraucht-Flag zurückgesetzt.
     """
-    if "csrf_token" not in request.session:
+    token_verbraucht = request.session.get("csrf_token_verbraucht", False)
+
+    if ("csrf_token" not in request.session) or token_verbraucht:
         roher_token = erzeuge_csrf_token()
         signierter = signiere_csrf_token(roher_token)
         request.session["csrf_token"] = signierter
+        request.session["csrf_token_verbraucht"] = False  # neuer Token ist unverbraucht
+
     return request.session["csrf_token"]
+
 
 
 def csrf_pruefen(request: Request, empfangener_token: str) -> bool:
