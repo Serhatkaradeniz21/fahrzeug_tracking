@@ -1,44 +1,45 @@
-"""
 # Service-Schicht für das FahrzeugTracking-System
-
-## Enthaltene Kategorien und Funktionen:
-
-### 1. Dashboard / Fahrzeugliste
-- `hole_fahrzeuge_fuer_dashboard`
-
-### 2. Fahrzeugverwaltung
-- `hole_fahrzeug_details`
-- `erstelle_fahrzeug`
-- `aktualisiere_fahrzeug`
-- `loesche_fahrzeug`
-
-### 3. KM-Anforderungen / Links
-- `erzeuge_km_anforderung`
-
-### 4. KM-Eingabe / Historie
-- `verarbeite_kilometer_eingabe`
-- `hole_km_historie`
-
-### 5. Wartungslogik
-- `_pruefe_wartungen_und_benachrichtigen`
-
-### 6. Hilfsfunktionen
-- `wert_oder_none`
-
-### 7. Mailversand
-- `_sende_warnmail`
-"""
+#
+# Enthaltene Kategorien und Funktionen:
+#
+# 1. Dashboard / Fahrzeugliste
+# - `hole_fahrzeuge_fuer_dashboard`
+#
+# 2. Fahrzeugverwaltung
+# - `hole_fahrzeug_details`
+# - `erstelle_fahrzeug`
+# - `aktualisiere_fahrzeug`
+# - `loesche_fahrzeug`
+#
+# 3. KM-Anforderungen / Links
+# - `erzeuge_km_anforderung`
+#
+# 4. KM-Eingabe / Historie
+# - `verarbeite_kilometer_eingabe`
+# - `hole_km_historie`
+#
+# 5. Wartungslogik
+# - `_pruefe_wartungen_und_benachrichtigen`
+#
+# 6. Hilfsfunktionen
+# - `wert_oder_none`
+#
+# 7. Mailversand
+# - `_sende_warnmail`
 
 # service/km_service.py
 # Geschäftslogik für das FahrzeugTracking-System.
 # Ziel:
 # - Verbindung zwischen Controller-Schicht und Datenbank.
 # - Konsistente Verarbeitung der Daten.
+
 from typing import Optional, List, Dict, Any
 from datetime import date
 import os
 import smtplib
 import secrets
+from email.message import EmailMessage
+from typing import Set, Tuple
 
 from model.km_model import (
     FahrzeugAnzeige,
@@ -71,6 +72,57 @@ class KilometerService:
         # Verbindung zur Datenbank aufbauen
         verbindung = get_db_verbindung()
         self.repo = KilometerRepository(verbindung)
+        self.verbindung = verbindung
+
+        # Verhindert, dass bei jeder Anfrage dieselbe Warnmail erneut verschickt wird
+        # (gilt pro Prozesslaufzeit; bei Neustart wird der Zustand zurückgesetzt).
+        self._gesendete_wartungswarnungen: Set[Tuple[int, str, int]] = set()
+
+    def _sende_warnmail(self, empfaenger: str, betreff: str, text: str) -> None:
+        """
+        Verschickt eine Warnmail via SMTP.
+
+        Erwartete Umgebungsvariablen (mit Defaults für lokale Test-SMTP-Server):
+        - SMTP_HOST (Default: localhost)
+        - SMTP_PORT (Default: 1025)
+        - SMTP_USER (optional)
+        - SMTP_PASSWORD (optional)
+        - SMTP_TLS (true/false, Default: false)
+        - SMTP_SSL (true/false, Default: false)
+        - SMTP_FROM (optional)
+        """
+
+        host = os.getenv("SMTP_HOST", "localhost")
+        port = int(os.getenv("SMTP_PORT", "1025"))
+        user = os.getenv("SMTP_USER")
+        password = os.getenv("SMTP_PASSWORD")
+        use_tls = os.getenv("SMTP_TLS", "false").lower() == "true"
+        use_ssl = os.getenv("SMTP_SSL", "false").lower() == "true"
+        sender = os.getenv("SMTP_FROM") or user or "noreply@fahrzeugtracking.local"
+
+        msg = EmailMessage()
+        msg["From"] = sender
+        msg["To"] = empfaenger
+        msg["Subject"] = betreff
+        msg.set_content(text)
+
+        try:
+            if use_ssl:
+                server = smtplib.SMTP_SSL(host, port, timeout=10)
+            else:
+                server = smtplib.SMTP(host, port, timeout=10)
+
+            try:
+                if use_tls and not use_ssl:
+                    server.starttls()
+                if user and password:
+                    server.login(user, password)
+                server.send_message(msg)
+            finally:
+                server.quit()
+        except Exception as exc:
+            # Keine Exception nach außen werfen, damit die Anwendung nicht abstürzt
+            print("WARNUNG: Mailversand fehlgeschlagen:", exc)
 
     # ---------------------------------------------------------
     # Dashboard / Fahrzeugliste
@@ -304,79 +356,25 @@ class KilometerService:
 
         fahrzeug_text = f"{fahrzeug.get('kennzeichen', '')} - {fahrzeug.get('bezeichnung', '')}"
 
-        # TÜV prüfen (Hinweis 3 Monate vorher)
-        tuev_bis = fahrzeug.get("tuev_bis")
-        if tuev_bis:
-            heute = date.today()
-            diff_tage = (tuev_bis - heute).days
-            if 0 <= diff_tage <= 90:
-                betreff = f"TÜV-Hinweis für Fahrzeug {fahrzeug_text}"
-                text = (
-                    f"Für das Fahrzeug {fahrzeug_text} läuft der TÜV am {tuev_bis.strftime('%d.%m.%Y')} ab.\n"
-                    f"Restlaufzeit: {diff_tage} Tage.\n"
-                    "Bitte rechtzeitig einen Termin für die Hauptuntersuchung planen."
-                )
-                self._sende_warnmail(empfaenger, betreff, text)
-
-        # Ölwechsel prüfen (Intervall 15.000 km, Warnungen bei 10k / 13k / 15k)
+        # ---------------------------------------------------------
+        # Ölwechsel: Mail senden, wenn Schwellwert erreicht/überschritten
+        # ---------------------------------------------------------
+        fahrzeug_id = fahrzeug.get("id")
         aktueller_km = fahrzeug.get("aktueller_km") or 0
-        naechster_oel_km = fahrzeug.get("naechster_oelwechsel_km")
+        naechster_oelwechsel_km = fahrzeug.get("naechster_oelwechsel_km")
 
-        if naechster_oel_km is not None and naechster_oel_km > 0:
-            basis_letzter_oelwechsel = naechster_oel_km - 15000
-            km_seit_letztem_oel = aktueller_km - basis_letzter_oelwechsel
-
-            warnstufen = [
-                (10000, 13000, "10.000 km seit letztem Ölwechsel"),
-                (13000, 15000, "13.000 km seit letztem Ölwechsel"),
-                (15000, float("inf"), "15.000 km erreicht – Ölwechsel fällig"),
-            ]
-
-            warnstufe = None
-            for untergrenze, obergrenze, text_warnung in warnstufen:
-                if untergrenze <= km_seit_letztem_oel < obergrenze:
-                    warnstufe = text_warnung
-                    break
-
-            if warnstufe is not None:
-                betreff = f"Ölwechsel-Hinweis für Fahrzeug {fahrzeug_text}"
-                text = (
-                    f"Für das Fahrzeug {fahrzeug_text} wurden ca. {km_seit_letztem_oel} km "
-                    f"seit dem letzten Ölwechsel gefahren.\n"
-                    f"Aktueller Kilometerstand: {aktueller_km} km.\n"
-                    f"Hinweis: {warnstufe}.\n"
-                    "Bitte einen Ölwechsel einplanen."
-                )
-                self._sende_warnmail(empfaenger, betreff, text)
-
-    # ---------------------------------------------------------
-    # Mailversand (Prototyp, z.B. mit MailHog, UTF-8)
-    # ---------------------------------------------------------
-
-    def _sende_warnmail(self, empfaenger: str, betreff: str, text: str) -> None:
-        """
-        Versendet eine Warnmail.
-
-        - Verwendet UTF-8, damit Umlaute wie Ü/Ö/Ä korrekt übertragen werden.
-        - Im Prototyp wird über localhost:1025 gesendet (z.B. MailHog).
-        - Bei Fehlern wird nur eine Meldung in der Konsole ausgegeben.
-        """
-        from email.mime.text import MIMEText
-        from email.header import Header
-        from email.utils import formataddr
-
-        absender = os.getenv("MAIL_ABSENDER", "karadeniz.serhat21@gmail.com")
-
-        msg = MIMEText(text, _charset="utf-8")
-        msg["Subject"] = Header(betreff, "utf-8")
-        msg["From"] = formataddr(("FahrzeugTracking", absender))
-        msg["To"] = empfaenger
-
-        try:
-            with smtplib.SMTP("localhost", 1025) as server:
-                server.sendmail(absender, [empfaenger], msg.as_string())
-            print(f"Warnmail versendet an {empfaenger}: {betreff}")
-        except Exception as fehler:
-            print("Warnmail konnte nicht gesendet werden:", fehler)
-            print("Geplante Mail:", betreff)
-            print(text)
+        if isinstance(fahrzeug_id, int) and isinstance(naechster_oelwechsel_km, int):
+            rest_km = naechster_oelwechsel_km - aktueller_km
+            if rest_km <= 0:
+                key = (fahrzeug_id, "oelwechsel", naechster_oelwechsel_km)
+                if key not in self._gesendete_wartungswarnungen:
+                    betreff = f"Wartung fällig: Ölwechsel ({fahrzeug_text})"
+                    text = (
+                        "Ölwechsel-Schwellwert erreicht/überschritten.\n\n"
+                        f"Fahrzeug: {fahrzeug_text}\n"
+                        f"Aktueller KM-Stand: {aktueller_km}\n"
+                        f"Ölwechsel fällig bei: {naechster_oelwechsel_km}\n"
+                        f"Differenz (Rest): {rest_km} km\n"
+                    )
+                    self._sende_warnmail(empfaenger=empfaenger, betreff=betreff, text=text)
+                    self._gesendete_wartungswarnungen.add(key)
