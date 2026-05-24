@@ -21,3 +21,13 @@ services:
         sync: false
       - key: DISPONENT_PASS
         sync: false
+      - key: DISPONENT_EMAIL
+        sync: false
+      - key: SMTP_SERVER
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
