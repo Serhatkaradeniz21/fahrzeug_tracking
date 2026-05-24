@@ -1,31 +1,38 @@
-use fahrzeug_tracking;
-CREATE TABLE fahrzeuge (
+CREATE DATABASE IF NOT EXISTS tracking;
+USE tracking;
+
+CREATE TABLE IF NOT EXISTS fahrzeuge (
     id INT AUTO_INCREMENT PRIMARY KEY,
     kennzeichen VARCHAR(20) NOT NULL,
     modell VARCHAR(50),
-    aktueller_km INT,
-    status VARCHAR(20),
+    aktueller_km INT DEFAULT 0,
+    tuev_bis DATE,
+    naechster_oelwechsel_km INT,
     erstellt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE km_anforderungen (
+CREATE TABLE IF NOT EXISTS km_anforderungen (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fahrzeug_id INT,
     angeforderter_km INT,
+    token VARCHAR(255),
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verbraucht TINYINT(1) DEFAULT 0,
     FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id)
 );
 
-CREATE TABLE km_eintraege (
+CREATE TABLE IF NOT EXISTS km_eintraege (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fahrzeug_id INT NOT NULL,
     aktueller_km INT NOT NULL,
     fahrer_name VARCHAR(100),
     token VARCHAR(255),
+    foto_pfad VARCHAR(255),
     erfasst_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id)
 );
-CREATE TABLE wartungen (
+
+CREATE TABLE IF NOT EXISTS wartungen (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fahrzeug_id INT NOT NULL,
     typ VARCHAR(100) NOT NULL,

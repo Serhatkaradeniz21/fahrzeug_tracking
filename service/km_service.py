@@ -38,8 +38,6 @@ from datetime import date
 import os
 import smtplib
 import secrets
-from email.message import EmailMessage
-from typing import Set, Tuple
 
 from model.km_model import (
     FahrzeugAnzeige,
@@ -73,56 +71,6 @@ class KilometerService:
         verbindung = get_db_verbindung()
         self.repo = KilometerRepository(verbindung)
         self.verbindung = verbindung
-
-        # Verhindert, dass bei jeder Anfrage dieselbe Warnmail erneut verschickt wird
-        # (gilt pro Prozesslaufzeit; bei Neustart wird der Zustand zurückgesetzt).
-        self._gesendete_wartungswarnungen: Set[Tuple[int, str, int]] = set()
-
-    def _sende_warnmail(self, empfaenger: str, betreff: str, text: str) -> None:
-        """
-        Verschickt eine Warnmail via SMTP.
-
-        Erwartete Umgebungsvariablen (mit Defaults für lokale Test-SMTP-Server):
-        - SMTP_HOST (Default: localhost)
-        - SMTP_PORT (Default: 1025)
-        - SMTP_USER (optional)
-        - SMTP_PASSWORD (optional)
-        - SMTP_TLS (true/false, Default: false)
-        - SMTP_SSL (true/false, Default: false)
-        - SMTP_FROM (optional)
-        """
-
-        host = os.getenv("SMTP_HOST", "localhost")
-        port = int(os.getenv("SMTP_PORT", "1025"))
-        user = os.getenv("SMTP_USER")
-        password = os.getenv("SMTP_PASSWORD")
-        use_tls = os.getenv("SMTP_TLS", "false").lower() == "true"
-        use_ssl = os.getenv("SMTP_SSL", "false").lower() == "true"
-        sender = os.getenv("SMTP_FROM") or user or "noreply@fahrzeugtracking.local"
-
-        msg = EmailMessage()
-        msg["From"] = sender
-        msg["To"] = empfaenger
-        msg["Subject"] = betreff
-        msg.set_content(text)
-
-        try:
-            if use_ssl:
-                server = smtplib.SMTP_SSL(host, port, timeout=10)
-            else:
-                server = smtplib.SMTP(host, port, timeout=10)
-
-            try:
-                if use_tls and not use_ssl:
-                    server.starttls()
-                if user and password:
-                    server.login(user, password)
-                server.send_message(msg)
-            finally:
-                server.quit()
-        except Exception as exc:
-            # Keine Exception nach außen werfen, damit die Anwendung nicht abstürzt
-            print("WARNUNG: Mailversand fehlgeschlagen:", exc)
 
     # ---------------------------------------------------------
     # Dashboard / Fahrzeugliste
@@ -356,25 +304,90 @@ class KilometerService:
 
         fahrzeug_text = f"{fahrzeug.get('kennzeichen', '')} - {fahrzeug.get('bezeichnung', '')}"
 
-        # ---------------------------------------------------------
-        # Ölwechsel: Mail senden, wenn Schwellwert erreicht/überschritten
-        # ---------------------------------------------------------
-        fahrzeug_id = fahrzeug.get("id")
-        aktueller_km = fahrzeug.get("aktueller_km") or 0
-        naechster_oelwechsel_km = fahrzeug.get("naechster_oelwechsel_km")
+        # Ölwechsel-Prüfung bei 15000 km
+        aktueller_km = fahrzeug.get("aktueller_km", 0) or 0
+        oelwechsel_schwellen = 15000
 
-        if isinstance(fahrzeug_id, int) and isinstance(naechster_oelwechsel_km, int):
-            rest_km = naechster_oelwechsel_km - aktueller_km
-            if rest_km <= 0:
-                key = (fahrzeug_id, "oelwechsel", naechster_oelwechsel_km)
-                if key not in self._gesendete_wartungswarnungen:
-                    betreff = f"Wartung fällig: Ölwechsel ({fahrzeug_text})"
-                    text = (
-                        "Ölwechsel-Schwellwert erreicht/überschritten.\n\n"
-                        f"Fahrzeug: {fahrzeug_text}\n"
-                        f"Aktueller KM-Stand: {aktueller_km}\n"
-                        f"Ölwechsel fällig bei: {naechster_oelwechsel_km}\n"
-                        f"Differenz (Rest): {rest_km} km\n"
-                    )
-                    self._sende_warnmail(empfaenger=empfaenger, betreff=betreff, text=text)
-                    self._gesendete_wartungswarnungen.add(key)
+        print(f"DEBUG: Wartungsprüfung für {fahrzeug_text}")
+        print(f"DEBUG: Aktueller KM: {aktueller_km}")
+        print(f"DEBUG: Ölwechsel-Schwelle: {oelwechsel_schwellen}")
+
+        if aktueller_km >= oelwechsel_schwellen:
+            print(f"DEBUG: Ölwechsel-Schwelle erreicht! Prüfe Benachrichtigungen...")
+            # Prüfen, ob bereits eine Benachrichtigung gesendet wurde
+            letzte_benachrichtigung = self.repo.hole_letzte_oelwechsel_benachrichtigung(fahrzeug.get("id"))
+            print(f"DEBUG: Letzte Benachrichtigung: {letzte_benachrichtigung}")
+
+            # Nur senden, wenn noch keine Benachrichtigung für diesen Kilometerstand gesendet wurde
+            if not letzte_benachrichtigung or letzte_benachrichtigung.get("km_als_benachrichtigt", 0) < oelwechsel_schwellen:
+                print(f"DEBUG: Sende Ölwechsel-Benachrichtigung an {empfaenger}")
+                betreff = f"Ölwechsel erforderlich - {fahrzeug_text}"
+                nachricht = f"""
+WICHTIG: Ölwechsel erforderlich für Fahrzeug {fahrzeug_text}
+
+Der aktuelle Kilometerstand von {aktueller_km} km wurde erreicht.
+
+Bitte führen Sie den Ölwechsel zeitnah durch.
+
+Fahrzeugdetails:
+- Kennzeichen: {fahrzeug.get('kennzeichen', '')}
+- Bezeichnung: {fahrzeug.get('bezeichnung', '')}
+- Aktueller KM: {aktueller_km} km
+- Ölwechsel-Schwelle: {oelwechsel_schwellen} km
+
+Dies ist eine automatische Benachrichtigung vom FahrzeugTracking-System.
+"""
+                self._sende_warnmail(empfaenger, betreff, nachricht)
+
+                # Benachrichtigung in Datenbank speichern
+                self.repo.speichere_oelwechsel_benachrichtigung(
+                    fahrzeug.get("id"),
+                    aktueller_km
+                )
+            else:
+                print(f"DEBUG: Benachrichtigung bereits gesendet bei KM {letzte_benachrichtigung.get('km_als_benachrichtigt')}")
+        else:
+            print(f"DEBUG: Ölwechsel-Schwelle noch nicht erreicht")
+
+    def _sende_warnmail(self, empfaenger: str, betreff: str, nachricht: str) -> None:
+        """
+        Sendet eine Warn-E-Mail über SMTP.
+        """
+        try:
+            # SMTP-Konfiguration aus Umgebungsvariablen
+            smtp_server = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+            smtp_port = int(os.getenv("SMTP_PORT", "587"))
+            smtp_user = os.getenv("SMTP_USER")
+            smtp_password = os.getenv("SMTP_PASSWORD")
+            
+            if not smtp_user or not smtp_password:
+                print("WARNUNG: SMTP_USER oder SMTP_PASSWORD nicht gesetzt. E-Mail wird nicht gesendet.")
+                print(f"Empfänger: {empfaenger}")
+                print(f"Betreff: {betreff}")
+                print(f"Nachricht: {nachricht}")
+                return
+            
+            # E-Mail erstellen
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            msg = MIMEMultipart()
+            msg['From'] = smtp_user
+            msg['To'] = empfaenger
+            msg['Subject'] = betreff
+            
+            msg.attach(MIMEText(nachricht, 'plain'))
+            
+            # E-Mail senden
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.send_message(msg)
+            
+            print(f"E-Mail erfolgreich gesendet an {empfaenger}")
+            
+        except Exception as e:
+            print(f"FEHLER beim Senden der E-Mail: {e}")
+            print(f"Empfänger: {empfaenger}")
+            print(f"Betreff: {betreff}")
+            print(f"Nachricht: {nachricht}")

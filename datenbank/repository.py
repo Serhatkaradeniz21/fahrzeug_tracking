@@ -544,3 +544,76 @@ class KilometerRepository:
             print("Fehler beim Aktualisieren der KM-Anforderung:", fehler)
         finally:
             cursor.close()
+
+    def hole_letzte_oelwechsel_benachrichtigung(self, fahrzeug_id: int) -> Optional[dict]:
+        """
+        Holt die letzte Ölwechsel-Benachrichtigung für ein Fahrzeug.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs.
+
+        Returns:
+            Dictionary mit den Benachrichtigungsdaten oder None.
+        """
+        cursor = self.verbindung.cursor(dictionary=True)
+
+        try:
+            # Prüfen, ob die Tabelle existiert
+            cursor.execute("SHOW TABLES LIKE 'oelwechsel_benachrichtigungen'")
+            if not cursor.fetchone():
+                return None
+
+            cursor.execute(
+                """
+                SELECT
+                    id,
+                    fahrzeug_id,
+                    km_als_benachrichtigt,
+                    benachrichtigt_am
+                FROM oelwechsel_benachrichtigungen
+                WHERE fahrzeug_id = %s
+                ORDER BY benachrichtigt_am DESC
+                LIMIT 1
+                """,
+                (fahrzeug_id,),
+            )
+            return cursor.fetchone()
+        except Error as fehler:
+            print("Fehler beim Lesen der letzten Ölwechsel-Benachrichtigung:", fehler)
+            return None
+        finally:
+            cursor.close()
+
+    def speichere_oelwechsel_benachrichtigung(self, fahrzeug_id: int, km_stand: int) -> None:
+        """
+        Speichert eine Ölwechsel-Benachrichtigung in der Datenbank.
+
+        Args:
+            fahrzeug_id: Die ID des Fahrzeugs.
+            km_stand: Der Kilometerstand, bei dem benachrichtigt wurde.
+        """
+        cursor = self.verbindung.cursor()
+
+        try:
+            # Tabelle erstellen, falls sie nicht existiert
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS oelwechsel_benachrichtigungen (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    fahrzeug_id INT NOT NULL,
+                    km_als_benachrichtigt INT NOT NULL,
+                    benachrichtigt_am TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (fahrzeug_id) REFERENCES fahrzeuge(id)
+                )
+            """)
+
+            # Benachrichtigung speichern
+            sql = """
+                INSERT INTO oelwechsel_benachrichtigungen
+                (fahrzeug_id, km_als_benachrichtigt)
+                VALUES (%s, %s)
+            """
+            cursor.execute(sql, (fahrzeug_id, km_stand))
+        except Error as fehler:
+            print("Fehler beim Speichern der Ölwechsel-Benachrichtigung:", fehler)
+        finally:
+            cursor.close()

@@ -16,7 +16,10 @@ def render_km_eingabe_formular(token: str, csrf_token: str, hinweis: str = "") -
     """
     inhalt = f"""
         <div class="seite-zentriert">
-            <h1><a href="/km/eingabe/{token}">Kilometerstand melden</a></h1>
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 2rem; margin-bottom: 8px;">📊 Kilometerstand melden</h1>
+                <p style="color: var(--text-secondary); margin: 0;">Geben Sie Ihre Kilometerstand ein</p>
+            </div>
 
             <p class="hinweis">{hinweis}</p>
 
@@ -24,23 +27,23 @@ def render_km_eingabe_formular(token: str, csrf_token: str, hinweis: str = "") -
                 <input type="hidden" name="csrf_token" value="{csrf_token}" />
 
                 <div class="formular-gruppe">
-                    <label>Fahrername:</label>
-                    <input type="text" name="name_fahrer" required />
+                    <label for="name_fahrer">Fahrername</label>
+                    <input type="text" id="name_fahrer" name="name_fahrer" placeholder="Ihr Name" required />
                 </div>
 
                 <div class="formular-gruppe">
-                    <label>Kilometerstand:</label>
-                    <input type="number" name="kilometerstand_wert"
-                           required min="0" max="2000000" />
+                    <label for="kilometerstand_wert">Kilometerstand</label>
+                    <input type="number" id="kilometerstand_wert" name="kilometerstand_wert"
+                           placeholder="0" required min="0" max="2000000" />
                 </div>
 
                 <div class="formular-gruppe">
-                    <label>Foto vom Kilometerstand (optional):</label>
-                    <input type="file" name="foto_datei" accept="image/*" />
+                    <label for="foto_datei">Foto vom Kilometerstand (optional)</label>
+                    <input type="file" id="foto_datei" name="foto_datei" accept="image/*" />
                 </div>
 
                 <div class="button-gruppe zentriert">
-                    <button type="submit" class="btn-primar">Senden</button>
+                    <button type="submit" class="btn-primar">📤 Senden</button>
                 </div>
             </form>
         </div>
@@ -59,9 +62,11 @@ def render_km_danke_seite() -> str:
     """
     inhalt = """
         <div class="seite-zentriert">
-            <h1>Kilometerstand übermittelt</h1>
-            <p>Vielen Dank! Die Daten wurden erfolgreich gespeichert.</p>
-            <p>Du kannst dieses Fenster jetzt schließen.</p>
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 2rem; margin-bottom: 8px;">✅ Kilometerstand übermittelt</h1>
+                <p style="color: var(--text-secondary); margin: 0;">Vielen Dank! Die Daten wurden erfolgreich gespeichert.</p>
+            </div>
+            <p style="text-align: center; color: var(--text-secondary); margin-top: 24px;">Sie können dieses Fenster jetzt schließen.</p>
         </div>
     """
     return layout("KM-Erfassung abgeschlossen", inhalt)
@@ -112,12 +117,13 @@ def render_km_link_anzeige(antwort: Any) -> str:
 
     inhalt = f"""
         <div class="seite-zentriert">
-            <h1><a href="/dashboard">KM-Link für {kennzeichen}</a></h1>
-
-            <p>Diesen Link kannst du an den Fahrer senden:</p>
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 2rem; margin-bottom: 8px;">🔗 KM-Link für {kennzeichen}</h1>
+                <p style="color: var(--text-secondary); margin: 0;">Senden Sie diesen Link an den Fahrer</p>
+            </div>
 
             <div class="link-box">
-                <code>{link_text}</code>
+                <input type="text" value="{link_text}" readonly onclick="this.select()" />
             </div>
 
             <div class="button-gruppe zentriert">
@@ -173,28 +179,27 @@ def render_km_historie(fahrzeug: dict, km_eintraege: List[dict]) -> str:
 
     inhalt = f"""
         <div class="seite-voll">
-            <h1>
-                <a href="/fahrzeug/{fahrzeug_id}/historie">
-                    KM-Historie für {kennzeichen}
-                </a>
-            </h1>
+            <div class="kopfzeile">
+                <h1><a href="/fahrzeug/{fahrzeug_id}/historie">📊 KM-Historie für {kennzeichen}</a></h1>
+                <div class="kopf-buttons">
+                    <a href="/dashboard" class="btn-zweit">Zurück zum Dashboard</a>
+                </div>
+            </div>
 
-            <table class="daten-tabelle">
-                <thead>
-                    <tr>
-                        <th>Datum</th>
-                        <th>Kilometerstand</th>
-                        <th>Fahrer</th>
-                        <th>Foto</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {zeilen}
-                </tbody>
-            </table>
-
-            <div class="button-gruppe">
-                <a href="/dashboard" class="btn-zweit">Zurück zum Dashboard</a>
+            <div class="tabelle-container">
+                <table class="daten-tabelle">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Kilometerstand</th>
+                            <th>Fahrer</th>
+                            <th>Foto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {zeilen}
+                    </tbody>
+                </table>
             </div>
         </div>
     """

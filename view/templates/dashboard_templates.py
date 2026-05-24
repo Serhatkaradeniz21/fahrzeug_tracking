@@ -68,38 +68,40 @@ def render_dashboard(fahrzeuge: List[FahrzeugAnzeige], csrf_token: str) -> str:
         """
 
     inhalt = f"""
-        <div class="kopfzeile">
-            <h1><a href="/dashboard">Fahrzeug-Dashboard</a></h1>
-            <div class="kopf-buttons">
-                <a href="/fahrzeug/neu" class="btn-primar">Neues Fahrzeug</a>
-                <a href="/logout" class="btn-zweit">Logout</a>
+        <div class="seite-voll">
+            <div class="kopfzeile">
+                <h1><a href="/dashboard">🚗 Fahrzeug-Dashboard</a></h1>
+                <div class="kopf-buttons">
+                    <a href="/fahrzeug/neu" class="btn-primar">+ Neues Fahrzeug</a>
+                    <a href="/logout" class="btn-zweit">Logout</a>
+                </div>
             </div>
-        </div>
 
-        <div class="tabelle-container">
-            <table class="daten-tabelle">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Kennzeichen</th>
-                        <th>Bezeichnung</th>
-                        <th>KM aktuell</th>
-                        <th>TÜV bis</th>
-                        <th>TÜV Rest</th>
-                        <th>Nächster Ölwechsel</th>
-                        <th>Rest bis Ölwechsel</th>
-                        <th>Letzter Fahrer</th>
-                        <th>Letzte KM-Meldung</th>
-                        <th>Letzter Link</th>
-                        <th>Status</th>
-                        <th>KM-Link</th>
-                        <th>Historie</th>
-                        <th>Bearbeiten</th>
-                        <th>Löschen</th>
-                    </tr>
-                </thead>
-                <tbody>{zeilen}</tbody>
-            </table>
+            <div class="tabelle-container">
+                <table class="daten-tabelle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Kennzeichen</th>
+                            <th>Bezeichnung</th>
+                            <th>KM aktuell</th>
+                            <th>TÜV bis</th>
+                            <th>TÜV Rest</th>
+                            <th>Nächster Ölwechsel</th>
+                            <th>Rest bis Ölwechsel</th>
+                            <th>Letzter Fahrer</th>
+                            <th>Letzte KM-Meldung</th>
+                            <th>Letzter Link</th>
+                            <th>Status</th>
+                            <th>KM-Link</th>
+                            <th>Historie</th>
+                            <th>Bearbeiten</th>
+                            <th>Löschen</th>
+                        </tr>
+                    </thead>
+                    <tbody>{zeilen}</tbody>
+                </table>
+            </div>
         </div>
     """
 

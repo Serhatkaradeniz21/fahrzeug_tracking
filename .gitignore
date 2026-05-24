@@ -1,3 +1,7 @@
 # Ignoriere sensible Dateien und Dokumente
 .env
 dokumentation/
+__pycache__/
+*.pyc
+uploads/
+*.pyc

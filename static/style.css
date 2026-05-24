@@ -1,59 +1,122 @@
 /* --------------------------------------------------------
-   GLOBAL
+   GLOBAL - Modern Design System
 --------------------------------------------------------- */
 
-body {
-    font-family: Arial, sans-serif;
-    background-color: #40E0D0;   /* Türkis */
-    color: #0000FF;              /* Blau */
+:root {
+    --primary: #06b97d;
+    --primary-dark: #03217d;
+    --primary-light: #3388dd;
+    --secondary: #ffcc00;
+    --accent: #ff9900;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --background: #f5f5f5;
+    --surface: #ffffff;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border: #e0e0e0;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --radius: 12px;
+    --radius-sm: 8px;
+}
+
+* {
     margin: 0;
-    padding: 10px;               /* etwas Abstand zu den Browser-Rändern */
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--text-primary);
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    line-height: 1.6;
 }
 
 /* --------------------------------------------------------
-   ZENTRIERTE CONTAINER
+   ZENTRIERTE CONTAINER - Modern Cards
 --------------------------------------------------------- */
 
 .seite-zentriert {
-    max-width: 800px;
+    max-width: 900px;
     margin: 40px auto;
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.15);
+    background: var(--surface);
+    padding: 40px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
     text-align: center;
+    backdrop-filter: blur(10px);
 }
 
 /* Seite mit voller Breite, aber zentriertem Inhalt (z.B. Historie) */
 .seite-voll {
-    max-width: 1100px;
+    max-width: 1400px;
     margin: 40px auto;
-    background: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.12);
+    background: var(--surface);
+    padding: 0;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
 }
 
 /* Tabellenbereich (Dashboard) zentrieren & schmaler */
 .tabelle-container {
-    max-width: 1000px;             /* Breite des Dashboards */
-    margin: 20px auto 40px auto;   /* zentriert, Abstand nach oben/unten */
-    padding: 0 10px 20px 10px;
+    margin: 0;
+    padding: 20px;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Gesamttabelle */
+.daten-tabelle {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    font-size: 13px;
+    box-shadow: var(--shadow);
 }
 
 /* --------------------------------------------------------
-   HEADERS
+   HEADERS - Modern Typography
 --------------------------------------------------------- */
 
 h1, h2, h3 {
-    color: #0000FF;
+    color: var(--text-primary);
     margin-top: 0;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
 }
 
 /* H1-Link wie Logo (kein lila Link, kein Unterstrich) */
 h1 a {
     color: inherit;
     text-decoration: none;
+    transition: opacity 0.2s ease;
 }
 
 h1 a:visited {
@@ -61,7 +124,7 @@ h1 a:visited {
 }
 
 h1 a:hover {
-    opacity: 0.85;
+    opacity: 0.8;
 }
 
 /* Dashboard Kopfzeile – ebenfalls zentriert & schmaler */
@@ -69,71 +132,95 @@ h1 a:hover {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 30px;
-    background: #009999;   /* sanfteres Dunkeltürkis */
+    padding: 20px 30px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: #ffffff;
-    max-width: 1000px;     /* gleiche Breite wie Tabelle */
-    margin: 20px auto 10px auto;
-    border-radius: 10px;
+    margin: 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: none;
 }
 
 .kopfzeile h1 {
     color: #ffffff;
     margin: 0;
+    font-size: 1.75rem;
 }
 
 .kopf-buttons {
     display: flex;
-    gap: 10px;
+    gap: 12px;
 }
 
 /* --------------------------------------------------------
-   TABELLEN
+   TABELLEN - Modern Table Design
 --------------------------------------------------------- */
 
 /* Gesamttabelle */
 .daten-tabelle {
     width: 100%;
-    border-collapse: collapse;
-    background: #ffffff;
-    border-radius: 8px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--surface);
+    border-radius: var(--radius);
     overflow: hidden;
     font-size: 14px;
+    box-shadow: var(--shadow);
 }
 
 /* Tabellenkopf */
 .daten-tabelle thead {
-    background: #6d78e0;  /* weiches Blau */
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: #ffffff;
+}
+
+.daten-tabelle thead th {
+    padding: 12px 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    border-bottom: none;
 }
 
 /* KEIN Hover im Tabellenkopf */
 .daten-tabelle thead tr:hover {
-    background: #6d78e0 !important;
+    background: transparent !important;
 }
 
 /* Tabellenzellen */
 .daten-tabelle th,
 .daten-tabelle td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border);
     text-align: center;
+}
+
+.daten-tabelle tbody tr:last-child td {
+    border-bottom: none;
 }
 
 /* Zebra-Streifen */
 .daten-tabelle tbody tr:nth-child(even) {
-    background: #f5f5f5;
+    background: var(--background);
 }
 
 /* Hover NUR für tbody */
 .daten-tabelle tbody tr:hover {
-    background: #e0f7f5;
+    background: var(--primary-light);
+    color: white;
+    transition: all 0.2s ease;
 }
 
 /* Links in Tabellen */
 .daten-tabelle td a {
-    color: #0000FF;
+    color: #f9fbfc;
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.daten-tabelle tbody tr:hover td a {
+    color: white;
 }
 
 .daten-tabelle td a:hover {
@@ -141,7 +228,7 @@ h1 a:hover {
 }
 
 /* --------------------------------------------------------
-   BUTTONS
+   BUTTONS - Modern Button Design
 --------------------------------------------------------- */
 
 button,
@@ -153,23 +240,22 @@ a.btn-primar,
 a.btn-zweit,
 a.btn-klein,
 a.btn-gefahr {
-    display: inline-block;
-    padding: 10px 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
     font-size: 14px;
-    border-radius: 6px;
-    border: 2px solid #40E0D0;
-    background-color: #ffffff;
-    color: #0000FF;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #ffffff;
     cursor: pointer;
     text-decoration: none;
-    transition:
-        background-color 0.15s ease,
-        color 0.15s ease,
-        transform 0.08s ease,
-        box-shadow 0.08s ease;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
 }
 
-/* Hover für Buttons */
 button:hover,
 .btn-primar:hover,
 .btn-zweit:hover,
@@ -179,13 +265,10 @@ a.btn-primar:hover,
 a.btn-zweit:hover,
 a.btn-klein:hover,
 a.btn-gefahr:hover {
-    background-color: #40E0D0;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
 }
 
-/* Active-State (beim Klicken) */
 button:active,
 .btn-primar:active,
 .btn-zweit:active,
@@ -196,68 +279,55 @@ a.btn-zweit:active,
 a.btn-klein:active,
 a.btn-gefahr:active {
     transform: translateY(0);
-    box-shadow: none;
 }
 
-/* Primärer Button */
 .btn-primar,
 a.btn-primar {
-    background-color: #0000FF;
-    color: #ffffff;
-    border-color: #0000FF;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
 }
 
-.btn-primar:hover,
-a.btn-primar:hover {
-    background-color: #ffffff;
-    color: #0000FF;
-}
-
-/* Zweit-Button */
 .btn-zweit,
 a.btn-zweit {
-    background-color: #ffffff;
-    color: #0000FF;
+    background: var(--surface);
+    color: var(--text-primary);
+    border: 2px solid var(--border);
 }
 
-/* Kleine Buttons (z.B. in Tabellen) */
+.btn-zweit:hover,
+a.btn-zweit:hover {
+    background: var(--background);
+}
+
 .btn-klein,
 a.btn-klein {
-    padding: 4px 10px;
-    font-size: 12px;
+    padding: 4px 8px;
+    font-size: 11px;
 }
 
-/* Gefahren-Button */
 .btn-gefahr,
 a.btn-gefahr {
-    border-color: #ff4d4d;
-    color: #ff4d4d;
-}
-
-.btn-gefahr:hover,
-a.btn-gefahr:hover {
-    background-color: #ff4d4d;
-    color: #ffffff;
+    background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
 }
 
 /* --------------------------------------------------------
-   FORMULARE
+   FORMULARE - Modern Form Design
 --------------------------------------------------------- */
 
 .formular {
     text-align: left;
-    margin-top: 15px;
+    margin-top: 20px;
 }
 
 .formular-gruppe {
-    margin-bottom: 12px;
+    margin-bottom: 20px;
 }
 
 .formular-gruppe label {
     display: block;
-    font-weight: bold;
-    margin-bottom: 4px;
-    color: #0000FF;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
 }
 
 .formular-gruppe input[type="text"],
@@ -266,17 +336,27 @@ a.btn-gefahr:hover {
 .formular-gruppe input[type="date"],
 .formular-gruppe input[type="file"] {
     width: 100%;
-    padding: 6px 8px;
-    border-radius: 5px;
-    border: 1px solid #40E0D0;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: all 0.3s ease;
     box-sizing: border-box;
+}
+
+.formular-gruppe input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 /* Grid für zwei-spaltige Formularfelder */
 .formular-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px 20px;
+    gap: 20px;
 }
 
 /* --------------------------------------------------------
@@ -284,30 +364,36 @@ a.btn-gefahr:hover {
 --------------------------------------------------------- */
 
 .button-gruppe {
-    margin-top: 20px;
+    margin-top: 24px;
 }
 
 .button-gruppe.zentriert {
     text-align: center;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 /* --------------------------------------------------------
-   HINWEISE / FEHLER
+   HINWEISE / FEHLER - Modern Alerts
 --------------------------------------------------------- */
 
 .hinweis-fehler {
-    color: #ff0000;
-    font-weight: bold;
+    color: var(--danger);
+    font-weight: 600;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--danger);
+    margin-bottom: 16px;
 }
 
 /* Allgemeiner Hinweis-Text */
 .hinweis {
-    margin-top: 10px;
-    margin-bottom: 5px;
-    color: #111111;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
 }
 
 /* --------------------------------------------------------
@@ -315,18 +401,21 @@ a.btn-gefahr:hover {
 --------------------------------------------------------- */
 
 .link-box {
-    margin: 20px auto;
+    margin: 24px auto;
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
-/* Falls du mal ein Input in der Linkbox benutzt */
 .link-box input[type="text"] {
     width: 70%;
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #40E0D0;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    font-size: 14px;
     box-sizing: border-box;
 }

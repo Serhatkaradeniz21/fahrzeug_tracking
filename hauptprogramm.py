@@ -74,6 +74,16 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Ermöglicht den Zugriff auf hochgeladene Dateien, wie z. B. Fahrerfotos.
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+# Root-Route: Weiterleitung zur Login-Seite
+from fastapi.responses import RedirectResponse
+
+@app.get("/", response_class=RedirectResponse)
+async def root():
+    """
+    Root-Route leitet automatisch zur Login-Seite weiter.
+    """
+    return "/login"
+
 # Standardmäßige CSRF-Token-Generierung (pro Sitzung ein Token)
 def generiere_csrf_pro_sitzung(request):
     """

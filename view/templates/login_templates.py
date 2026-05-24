@@ -13,7 +13,10 @@ def render_login_seite(csrf_token: str, fehlermeldung: Optional[str] = None) -> 
     inhalt = f"""
         <div class="seite-zentriert">
 
-            <h1><a href="/login">FahrzeugTracking – Login</a></h1>
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 2.5rem; margin-bottom: 8px;">FahrzeugTracking</h1>
+                <p style="color: var(--text-secondary); margin: 0;">Willkommen zurück</p>
+            </div>
 
             {fehler(fehlermeldung)}
 
@@ -21,19 +24,23 @@ def render_login_seite(csrf_token: str, fehlermeldung: Optional[str] = None) -> 
                 <input type="hidden" name="csrf_token" value="{csrf_token}" />
 
                 <div class="formular-gruppe">
-                    <label>Benutzername:</label>
-                    <input type="text" name="benutzername" required />
+                    <label for="benutzername">Benutzername</label>
+                    <input type="text" id="benutzername" name="benutzername" placeholder="Ihr Benutzername" required autocomplete="username" />
                 </div>
 
                 <div class="formular-gruppe">
-                    <label>Passwort:</label>
-                    <input type="password" name="passwort" required />
+                    <label for="passwort">Passwort</label>
+                    <input type="password" id="passwort" name="passwort" placeholder="Ihr Passwort" required autocomplete="current-password" />
                 </div>
 
                 <div class="button-gruppe zentriert">
                     <button type="submit" class="btn-primar">Anmelden</button>
                 </div>
             </form>
+
+            <p style="text-align: center; margin-top: 24px; color: var(--text-secondary); font-size: 13px;">
+                FahrzeugTracking System v1.0
+            </p>
 
         </div>
     """
