@@ -419,3 +419,22 @@ a.btn-gefahr {
     font-size: 14px;
     box-sizing: border-box;
 }
+
+/* --------------------------------------------------------
+   LOGO BANNER
+--------------------------------------------------------- */
+
+.logo-banner {
+    background: var(--surface);
+    padding: 20px;
+    text-align: center;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+.logo-image {
+    max-height: 80px;
+    max-width: 100%;
+    object-fit: contain;
+}

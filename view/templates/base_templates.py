@@ -19,6 +19,9 @@ def layout(titel: str, inhalt: str) -> str:
         </style>
     </head>
     <body>
+        <div class="logo-banner">
+            <img src="/static/logo.png" alt="PrimaFahrten Logo" class="logo-image">
+        </div>
         {inhalt}
     </body>
     </html>
